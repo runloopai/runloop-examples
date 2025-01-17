@@ -1,0 +1,24 @@
+{
+  "name": "runloop-demo-code-mounts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node agent.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "biome check --write ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@runloop/api-client": "^0.20.0",
+    "dotenv": "^16.4.7",
+    "openai": "^4.85.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4"
+  }
+}

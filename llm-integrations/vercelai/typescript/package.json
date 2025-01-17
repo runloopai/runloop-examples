@@ -1,0 +1,19 @@
+{
+  "name": "runloop-vercelai",
+  "version": "1.0.0",
+  "main": "vercelai.ts",
+  "scripts": {
+    "start": "tsx vercelai.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@ai-sdk/openai": "^1.0.20",
+    "@runloop/api-client": "^0.10.0",
+    "ai": "^4.0.39",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

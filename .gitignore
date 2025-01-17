@@ -1,0 +1,37 @@
+.DS_Store
+
+# Node.js dependencies
+node_modules/
+
+# Python virtual environments and uv package manager
+env/
+venv/
+.venv/
+ENV/
+.ENV/
+.uv/
+.env
+.env.dev
+uv.lock
+pyproject.toml
+.python-version
+
+
+# Byte-compiled Python files
+__pycache__/
+*.py[cod]
+
+#Python files
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+runloop-demo-browser/screenshots
+runloop-demo-computer/screenshots

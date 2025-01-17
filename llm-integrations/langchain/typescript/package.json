@@ -1,0 +1,18 @@
+{
+  "name": "runloop-langchain",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsx langchain.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@langchain/openai": "^0.3.17",
+    "@runloop/api-client": "^0.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

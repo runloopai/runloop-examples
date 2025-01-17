@@ -1,0 +1,24 @@
+{
+  "name": "runloop-demo-coding-agent",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "biome check --write ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "@runloop/api-client": "^0.19.0",
+    "openai": "^4.85.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.13.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}
