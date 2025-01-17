@@ -1,0 +1,11 @@
+[project]
+name = "python"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "crewai[tools]>=0.95.0",
+    "crewai-tools>=0.25.8",
+    "runloop-api-client>=0.13.0",
+]
