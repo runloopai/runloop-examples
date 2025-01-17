@@ -1,3 +1,0 @@
-export declare function getMaxValueFromMap(map: Map<unknown, number>): number;
-export declare function escapeRegExp(string: string): string;
-export declare function getSpecialTokenRegex(tokens: Set<string>): RegExp;
