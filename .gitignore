@@ -10,6 +10,9 @@ ENV/
 .uv/
 .env
 .env.dev
+uv.lock
+pyproject.toml
+.python-version
 
 
 # Byte-compiled Python files
