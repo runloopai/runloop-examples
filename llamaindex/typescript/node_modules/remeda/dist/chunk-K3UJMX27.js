@@ -1,1 +1,0 @@
-function o(r,n){let e=Math.ceil(r),t=Math.floor(n);if(t<e)throw new RangeError(`randomInteger: The range [${r.toString()},${n.toString()}] contains no integer`);return Math.floor(Math.random()*(t-e+1)+e)}export{o as a};

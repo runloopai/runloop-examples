@@ -1,0 +1,31 @@
+# Node.js dependencies
+node_modules/
+
+# Python virtual environments and uv package manager
+env/
+venv/
+.venv/
+ENV/
+.ENV/
+.uv/
+.env
+.env.dev
+
+
+# Byte-compiled Python files
+__pycache__/
+*.py[cod]
+
+#Python files
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+

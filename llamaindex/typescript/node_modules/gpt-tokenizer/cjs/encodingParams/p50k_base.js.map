@@ -1,1 +1,0 @@
-{"version":3,"file":"p50k_base.js","sourceRoot":"","sources":["../../src/encodingParams/p50k_base.ts"],"names":[],"mappings":";;AAMA,4BASC;AAZD,0DAA+C;AAC/C,iDAAuD;AAEvD,SAAgB,QAAQ,CACtB,mBAAqC;IAErC,OAAO;QACL,sBAAsB,EAAE,MAAM;QAC9B,eAAe,EAAE,qCAAsB;QACvC,mBAAmB;QACnB,oBAAoB,EAAE,IAAI,GAAG,CAAiB,CAAC,CAAC,4BAAS,EAAE,MAAM,CAAC,CAAC,CAAC;KACrE,CAAA;AACH,CAAC"}
