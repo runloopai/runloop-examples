@@ -1,0 +1,1 @@
+import{a as o}from"./chunk-RAAYCPUM.js";var i="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";function m(...n){return o(a,n)}function a(n){let r=[];for(let t=0;t<n;t++){let e=i[Math.floor(Math.random()*i.length)];r.push(e)}return r.join("")}export{m as a};

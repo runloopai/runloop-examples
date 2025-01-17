@@ -1,0 +1,13 @@
+import { MistralCore } from "../core.js";
+import { RequestOptions } from "../lib/sdks.js";
+import * as components from "../models/components/index.js";
+import { ConnectionError, InvalidRequestError, RequestAbortedError, RequestTimeoutError, UnexpectedClientError } from "../models/errors/httpclienterrors.js";
+import * as errors from "../models/errors/index.js";
+import { SDKError } from "../models/errors/sdkerror.js";
+import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
+import { Result } from "../types/fp.js";
+/**
+ * Agents Completion
+ */
+export declare function agentsComplete(client: MistralCore, request: components.AgentsCompletionRequest, options?: RequestOptions): Promise<Result<components.ChatCompletionResponse, errors.HTTPValidationError | SDKError | SDKValidationError | UnexpectedClientError | InvalidRequestError | RequestAbortedError | RequestTimeoutError | ConnectionError>>;
+//# sourceMappingURL=agentsComplete.d.ts.map

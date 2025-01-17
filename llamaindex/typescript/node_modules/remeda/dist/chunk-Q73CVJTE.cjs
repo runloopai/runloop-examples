@@ -1,0 +1,1 @@
+"use strict";Object.defineProperty(exports, "__esModule", {value: true});function d(...e){return e.length===2?(n,...r)=>t(n,...e,...r):t(...e)}var t=(e,n,r,...a)=>n(e,...a)?typeof r=="function"?r(e,...a):r.onTrue(e,...a):typeof r=="function"?e:r.onFalse(e,...a);exports.a = d;

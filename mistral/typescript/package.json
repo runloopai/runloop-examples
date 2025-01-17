@@ -1,0 +1,18 @@
+{
+  "name": "runloop-mistral",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsx mistral.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@mistralai/mistralai": "^1.3.6",
+    "@runloop/api-client": "^0.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

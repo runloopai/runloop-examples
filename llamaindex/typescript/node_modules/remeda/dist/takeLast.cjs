@@ -1,0 +1,1 @@
+"use strict";Object.defineProperty(exports, "__esModule", {value: true});var _chunkDLVKPDPZcjs = require('./chunk-DLVKPDPZ.cjs');require('./chunk-4CZEVLYK.cjs');require('./chunk-SUASHYJW.cjs');exports.takeLast = _chunkDLVKPDPZcjs.a;

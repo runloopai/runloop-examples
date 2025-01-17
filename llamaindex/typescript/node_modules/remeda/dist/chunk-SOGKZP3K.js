@@ -1,0 +1,1 @@
+import{a as l}from"./chunk-K26VP6CL.js";function T(e,n,r){return typeof e=="function"?(t,a)=>o(t,a,e):typeof n=="function"?l(o,[e,n],u):o(e,n,r)}function o(e,n,r){let t=[e,n];return e.length<n.length?e.map((a,i)=>r(a,n[i],i,t)):n.map((a,i)=>r(e[i],a,i,t))}var u=(e,n)=>(r,t,a)=>({next:n(r,e[t],t,[a,e]),hasNext:!0,done:t>=e.length-1});export{T as a};

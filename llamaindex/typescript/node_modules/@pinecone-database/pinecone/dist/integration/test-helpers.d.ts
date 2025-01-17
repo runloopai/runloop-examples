@@ -1,0 +1,24 @@
+import type { IndexStatsDescription, PineconeRecord, RecordMetadata, RecordSparseValues } from '../data';
+import { Index, Pinecone } from '../index';
+export declare const prefix = "preTest";
+export declare const diffPrefix = "diff-prefix";
+export declare const globalNamespaceOne = "global-ns-one";
+export declare const randomString: (length: any) => string;
+export declare const generateRecords: ({ dimension, quantity, prefix, withSparseValues, withMetadata, }: {
+    dimension?: number | undefined;
+    quantity?: number | undefined;
+    prefix?: string | null | undefined;
+    withSparseValues?: boolean | undefined;
+    withMetadata?: boolean | undefined;
+}) => PineconeRecord[];
+export declare const generateSparseValues: (dimension: number) => RecordSparseValues;
+export declare const generateMetadata: () => RecordMetadata;
+export declare const randomIndexName: (testName: string) => string;
+export declare const sleep: (ms: any) => Promise<unknown>;
+export declare const waitUntilReady: (indexName: string) => Promise<void>;
+export declare const waitUntilRecordsReady: (index: Index, namespace: string, recordIds: string[]) => Promise<IndexStatsDescription>;
+type Assertions = (result: any) => void;
+export declare const assertWithRetries: (asyncFn: () => Promise<any>, assertionsFn: Assertions, maxRetries?: number, delay?: number) => Promise<void>;
+export declare const getRecordIds: (index: any) => Promise<string[] | undefined>;
+export declare const retryDeletes: (pc: Pinecone, indexName: string) => Promise<void>;
+export {};

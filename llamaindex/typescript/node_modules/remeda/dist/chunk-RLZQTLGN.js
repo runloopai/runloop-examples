@@ -1,0 +1,1 @@
+import{a as n}from"./chunk-ENXBNJ36.js";import{a as i}from"./chunk-RAAYCPUM.js";function y(...t){return i(f,t)}function f(t,e){if(!n(e,1))return{...t};if(!n(e,2)){let{[e[0]]:r,...m}=t;return m}let o={...t};for(let r of e)delete o[r];return o}export{y as a};

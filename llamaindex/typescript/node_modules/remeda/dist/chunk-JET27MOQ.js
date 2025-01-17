@@ -1,0 +1,1 @@
+import{a}from"./chunk-RAAYCPUM.js";function x(...e){return a(d,e)}var d=(e,n,t)=>typeof e=="string"?o([...e],n,t).join(""):o(e,n,t);function o(e,n,t){let r=[...e];if(Number.isNaN(n)||Number.isNaN(t))return r;let s=n<0?e.length+n:n,i=t<0?e.length+t:t;return s<0||s>e.length||i<0||i>e.length||(r[s]=e[i],r[i]=e[s]),r}export{x as a};

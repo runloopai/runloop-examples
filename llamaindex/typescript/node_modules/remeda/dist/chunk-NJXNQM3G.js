@@ -1,0 +1,1 @@
+function d(...e){return e.length===2?(n,...r)=>t(n,...e,...r):t(...e)}var t=(e,n,r,...a)=>n(e,...a)?typeof r=="function"?r(e,...a):r.onTrue(e,...a):typeof r=="function"?e:r.onFalse(e,...a);export{d as a};

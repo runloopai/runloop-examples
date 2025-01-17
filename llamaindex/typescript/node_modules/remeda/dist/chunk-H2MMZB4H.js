@@ -1,0 +1,1 @@
+import{a as P}from"./chunk-RAAYCPUM.js";function s(...e){return P(r,e)}function r(e,u,t){let[n,...a]=u;if(n===void 0)return t;if(Array.isArray(e)){let o=[...e];return o[n]=r(e[n],a,t),o}let{[n]:T,...y}=e;return{...y,[n]:r(T,a,t)}}export{s as a,r as b};

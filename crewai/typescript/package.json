@@ -1,0 +1,17 @@
+{
+  "name": "typescript",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "create_maze_generator": "tsx crewai.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@runloop/api-client": "^0.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

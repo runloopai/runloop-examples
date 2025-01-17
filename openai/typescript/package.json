@@ -1,0 +1,19 @@
+{
+  "name": "runloop-openai",
+  "version": "1.0.0",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@runloop/api-client": "^0.10.0",
+    "openai": "^4.78.1"
+  },
+  "scripts": {
+    "start": "tsx index.ts"
+  }
+}

@@ -1,0 +1,1 @@
+import{a as i}from"./chunk-RAAYCPUM.js";function a(...e){return i(T,e)}function T(e,m){if(e<1)return[];let r=Number.isInteger(e)?e:Math.floor(e),t=new Array(r);for(let n=0;n<r;n++)t[n]=m(n);return t}export{a};

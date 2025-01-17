@@ -1,0 +1,29 @@
+{
+  "name": "rake-modified",
+  "version": "1.0.8",
+  "description": "An javascript implementation of the Rapid Automated Keyword Extraction (RAKE) algorithm. Forked from https://github.com/sleepycat/rapid-automated-keyword-extraction",
+  "main": "dist/index.js",
+  "jsnext:main": "src/index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "babel --copy-files --out-dir dist/ src/"
+  },
+  "keywords": [
+    "keyword",
+    "extraction",
+    "rake"
+  ],
+  "author": "Sameer Chandra",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-jest": "^19.0.0",
+    "babel-plugin-transform-async-to-generator": "^6.22.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.22.0"
+  },
+  "dependencies": {
+    "fs-promise": "^2.0.0",
+    "lodash": "^4.17.4"
+  }
+}

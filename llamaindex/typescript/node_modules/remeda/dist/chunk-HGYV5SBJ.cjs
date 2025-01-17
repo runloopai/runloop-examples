@@ -1,0 +1,1 @@
+"use strict";Object.defineProperty(exports, "__esModule", {value: true});var _chunkXWWGQNYMcjs = require('./chunk-XWWGQNYM.cjs');function i(...n){return o=>_chunkXWWGQNYMcjs.a.call(void 0, o,...n)}exports.a = i;

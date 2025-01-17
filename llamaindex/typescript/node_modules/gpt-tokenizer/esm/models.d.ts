@@ -1,0 +1,150 @@
+import type { EncodingName } from './mapping.js';
+export interface Model {
+    humanName: string;
+    encoding: EncodingName;
+    description: string;
+    /** YYYY-MM-DD for when the model is shut down */
+    shutdownDate?: string;
+    recommendedReplacement?: string;
+    /** how many tokens fit in the context window? */
+    context?: number;
+    /** how many tokens can be in the generated output? */
+    maxOutput?: number;
+    /** how many tokens can be in the input */
+    maxInput?: number;
+    /** in YYYY-MM, e.g. 2023-10 for "up to Oct 2023" */
+    trainingData?: string;
+    cost?: {
+        /** input cost per million tokens */
+        input?: number;
+        /** output cost per million tokens */
+        output?: number;
+        /** batch API input cost per million tokens */
+        batchInput?: number;
+        /** batch API output cost per million tokens */
+        batchOutput?: number;
+    };
+}
+export declare const chatEnabledModels: {
+    readonly 'o1-preview': Model;
+    readonly 'o1-preview-2024-09-12': Model;
+    readonly 'o1-mini': Model;
+    readonly 'o1-mini-2024-09-12': Model;
+    readonly 'chatgpt-4o-latest': Model;
+    readonly 'gpt-4o': Model;
+    readonly 'gpt-4o-2024-08-06': Model;
+    readonly 'gpt-4o-2024-05-13': Model;
+    readonly 'gpt-4o-mini': Model;
+    readonly 'gpt-4o-mini-2024-07-18': Model;
+    readonly 'gpt-4o-realtime-preview': Model;
+    readonly 'gpt-4o-realtime-preview-2024-10-01': Model;
+    readonly 'gpt-4o-audio-preview': Model;
+    readonly 'gpt-4o-audio-preview-2024-10-01': Model;
+    readonly 'gpt-4o-2024-08-06-finetune': Model;
+    readonly 'gpt-4o-mini-2024-07-18-finetune': Model;
+    readonly 'gpt-4o-mini-training': Model;
+    readonly 'gpt-4o-mini-training-2024-07-18': Model;
+    readonly 'gpt-4-turbo': Model;
+    readonly 'gpt-4-turbo-2024-04-09': Model;
+    readonly 'gpt-4-turbo-preview': Model;
+    readonly 'gpt-4-0125-preview': Model;
+    readonly 'gpt-4-1106-preview': Model;
+    readonly 'gpt-4': Model;
+    readonly 'gpt-4-0613': Model;
+    readonly 'gpt-3.5-turbo': Model;
+    readonly 'gpt-3.5-turbo-0125': Model;
+    readonly 'gpt-3.5-turbo-1106': Model;
+    readonly 'gpt-3.5-turbo-finetune': Model;
+    readonly 'gpt-3.5-turbo-16k': Model;
+    readonly 'gpt-4-32k': Model;
+    readonly 'gpt-4-32k-0613': Model;
+    readonly 'gpt-4-vision-preview': Model;
+    readonly 'gpt-4-1106-vision-preview': Model;
+    readonly 'gpt-4-0314': Model;
+    readonly 'gpt-4-32k-0314': Model;
+    readonly 'gpt-3.5-turbo-0613': Model;
+    readonly 'gpt-3.5-turbo-16k-0613': Model;
+    readonly 'gpt-3.5-turbo-0301': Model;
+};
+export declare const models: {
+    readonly 'text-embedding-3-small': Model;
+    readonly 'text-embedding-3-large': Model;
+    readonly 'text-embedding-ada-002': Model;
+    readonly 'gpt-3.5-turbo-instruct': Model;
+    readonly 'gpt-3.5-turbo-instruct-0914': Model;
+    readonly 'davinci-002': Model;
+    readonly 'babbage-002': Model;
+    readonly 'text-ada-001': Model;
+    readonly 'text-babbage-001': Model;
+    readonly 'text-curie-001': Model;
+    readonly 'text-davinci-001': Model;
+    readonly 'text-davinci-002': Model;
+    readonly 'text-davinci-003': Model;
+    readonly ada: Model;
+    readonly babbage: Model;
+    readonly curie: Model;
+    readonly davinci: Model;
+    readonly 'code-davinci-002': Model;
+    readonly 'code-davinci-001': Model;
+    readonly 'davinci-codex': Model;
+    readonly 'code-davinci-edit-001': Model;
+    readonly 'code-cushman-002': Model;
+    readonly 'code-cushman-001': Model;
+    readonly 'cushman-codex': Model;
+    readonly 'code-search-ada-code-001': Model;
+    readonly 'code-search-ada-text-001': Model;
+    readonly 'text-davinci-edit-001': Model;
+    readonly 'text-similarity-ada-001': Model;
+    readonly 'text-search-ada-doc-001': Model;
+    readonly 'text-search-ada-query-001': Model;
+    readonly 'text-similarity-babbage-001': Model;
+    readonly 'text-search-babbage-doc-001': Model;
+    readonly 'text-search-babbage-query-001': Model;
+    readonly 'code-search-babbage-code-001': Model;
+    readonly 'code-search-babbage-text-001': Model;
+    readonly 'text-similarity-curie-001': Model;
+    readonly 'text-search-curie-doc-001': Model;
+    readonly 'text-search-curie-query-001': Model;
+    readonly 'text-similarity-davinci-001': Model;
+    readonly 'text-search-davinci-doc-001': Model;
+    readonly 'text-search-davinci-query-001': Model;
+    readonly 'o1-preview': Model;
+    readonly 'o1-preview-2024-09-12': Model;
+    readonly 'o1-mini': Model;
+    readonly 'o1-mini-2024-09-12': Model;
+    readonly 'chatgpt-4o-latest': Model;
+    readonly 'gpt-4o': Model;
+    readonly 'gpt-4o-2024-08-06': Model;
+    readonly 'gpt-4o-2024-05-13': Model;
+    readonly 'gpt-4o-mini': Model;
+    readonly 'gpt-4o-mini-2024-07-18': Model;
+    readonly 'gpt-4o-realtime-preview': Model;
+    readonly 'gpt-4o-realtime-preview-2024-10-01': Model;
+    readonly 'gpt-4o-audio-preview': Model;
+    readonly 'gpt-4o-audio-preview-2024-10-01': Model;
+    readonly 'gpt-4o-2024-08-06-finetune': Model;
+    readonly 'gpt-4o-mini-2024-07-18-finetune': Model;
+    readonly 'gpt-4o-mini-training': Model;
+    readonly 'gpt-4o-mini-training-2024-07-18': Model;
+    readonly 'gpt-4-turbo': Model;
+    readonly 'gpt-4-turbo-2024-04-09': Model;
+    readonly 'gpt-4-turbo-preview': Model;
+    readonly 'gpt-4-0125-preview': Model;
+    readonly 'gpt-4-1106-preview': Model;
+    readonly 'gpt-4': Model;
+    readonly 'gpt-4-0613': Model;
+    readonly 'gpt-3.5-turbo': Model;
+    readonly 'gpt-3.5-turbo-0125': Model;
+    readonly 'gpt-3.5-turbo-1106': Model;
+    readonly 'gpt-3.5-turbo-finetune': Model;
+    readonly 'gpt-3.5-turbo-16k': Model;
+    readonly 'gpt-4-32k': Model;
+    readonly 'gpt-4-32k-0613': Model;
+    readonly 'gpt-4-vision-preview': Model;
+    readonly 'gpt-4-1106-vision-preview': Model;
+    readonly 'gpt-4-0314': Model;
+    readonly 'gpt-4-32k-0314': Model;
+    readonly 'gpt-3.5-turbo-0613': Model;
+    readonly 'gpt-3.5-turbo-16k-0613': Model;
+    readonly 'gpt-3.5-turbo-0301': Model;
+};

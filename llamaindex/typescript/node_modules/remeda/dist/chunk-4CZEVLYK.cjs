@@ -1,0 +1,1 @@
+"use strict";Object.defineProperty(exports, "__esModule", {value: true});var _chunkSUASHYJWcjs = require('./chunk-SUASHYJW.cjs');function u(r,n,a){let o=r.length-n.length;if(o===0)return r(...n);if(o===1)return _chunkSUASHYJWcjs.a.call(void 0, r,n,a);throw new Error("Wrong number of arguments")}exports.a = u;

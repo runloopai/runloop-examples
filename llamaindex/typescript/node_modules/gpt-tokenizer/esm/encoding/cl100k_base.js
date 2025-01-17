@@ -1,0 +1,11 @@
+/* eslint-disable import/extensions */
+import bpeRanks from '../bpeRanks/cl100k_base.js';
+import { GptEncoding } from '../GptEncoding.js';
+export * from '../constants.js';
+export * from '../specialTokens.js';
+const api = GptEncoding.getEncodingApi('cl100k_base', () => bpeRanks);
+const { decode, decodeAsyncGenerator, decodeGenerator, encode, encodeGenerator, isWithinTokenLimit, countTokens, encodeChat, encodeChatGenerator, vocabularySize, setMergeCacheSize, clearMergeCache, } = api;
+export { clearMergeCache, countTokens, decode, decodeAsyncGenerator, decodeGenerator, encode, encodeChat, encodeChatGenerator, encodeGenerator, isWithinTokenLimit, setMergeCacheSize, vocabularySize, };
+// eslint-disable-next-line import/no-default-export
+export default api;
+//# sourceMappingURL=cl100k_base.js.map

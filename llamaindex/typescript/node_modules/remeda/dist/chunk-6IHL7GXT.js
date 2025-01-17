@@ -1,0 +1,1 @@
+import{a as l}from"./chunk-RAAYCPUM.js";function m(...e){return l(o,e)}function o(e,r){if(r<=0)return[];if(r>=e.length)return[...e];let i=Math.min(r,e.length-r),t=new Set;for(;t.size<i;){let n=Math.floor(Math.random()*e.length);t.add(n)}return r===i?[...t].sort((n,a)=>n-a).map(n=>e[n]):e.filter((n,a)=>!t.has(a))}export{m as a};

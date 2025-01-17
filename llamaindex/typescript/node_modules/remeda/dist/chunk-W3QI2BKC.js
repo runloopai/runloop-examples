@@ -1,0 +1,1 @@
+import{a as o}from"./chunk-RAAYCPUM.js";function i(...e){return o(p,e)}var p=(e,a)=>{let n={};for(let[d,t]of e.entries()){let y=a(t,d,e);if(y!==void 0){let{[y]:r}=n;r===void 0&&(r=[],n[y]=r),r.push(t)}}return n};export{i as a};

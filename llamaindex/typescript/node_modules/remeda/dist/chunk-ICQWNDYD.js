@@ -1,0 +1,1 @@
+import{a as e}from"./chunk-RAAYCPUM.js";function u(...a){return e(o,a,l)}var o=(a,r)=>a.flatMap(r),l=a=>(r,t,y)=>{let n=a(r,t,y);return Array.isArray(n)?{done:!1,hasNext:!0,hasMany:!0,next:n}:{done:!1,hasNext:!0,next:n}};export{u as a};

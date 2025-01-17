@@ -1,0 +1,1 @@
+import{a}from"./chunk-7BKSRZNG.js";function f(t,i){let o=i.length-t.length;if(o===1){let[n,...r]=i;return a(n,{lazy:t,lazyArgs:r})}if(o===0){let n={lazy:t,lazyArgs:i};return Object.assign(e=>a(e,n),n)}throw new Error("Wrong number of arguments")}export{f as a};
