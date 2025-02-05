@@ -1,11 +1,14 @@
+import { OpenAI, Settings} from "llamaindex"
 import Runloop from '@runloop/api-client';
-import Anthropic from '@anthropic-ai/sdk';
 
 // Initialize clients
-const anthropic = new Anthropic({apiKey: process.env.ANTHROPIC_API_KEY,});
-const runloop = new Runloop({bearerToken: process.env.RUNLOOP_API_KEY});
+const runloop = new Runloop({ bearerToken: process.env.RUNLOOP_API_KEY });
+Settings.llm = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    model: "gpt-4o",
+})
 
-
+// Create an OpenAI agent to generate Python code and run it in a Runloop Devbox
 async function generateMazeCreator() {
     const prompt = `Write a Python script that generates a maze. The script should:
     1. Accept a size parameter from command line arguments
@@ -13,28 +16,18 @@ async function generateMazeCreator() {
     3. Print the maze where '#' represents walls and ' ' represents paths. Mark the Maze start with 'S' and end with 'E'
     4. Use argparse for command line argument parsing
     The code should be in the format of a Python script that can be run directly with 'python gen_maze.py --size 5'.
-    ONLY output the code and do NOT wrap the code in markdown!`;
+    ONLY output the code and do NOT wrap the code in markdown! Your code should start with an import and end with a print statement.`;
 
     try{
-        const {content} = await anthropic.messages.create({
-            model: "claude-3-5-sonnet-20241022",
-            max_tokens: 1000,
-            temperature: 0,
-            system: "Respond only with code. Do not include any markdown or comments.",
-            messages: [
-                {
-                "role": "user",
-                "content": [
-                    {
-                    "type": "text",
-                    "text": prompt
-                    }
-                ]
-                }
-            ]
-            });
-        const mazeGenerationScript = (content[0] as { text: string }).text;
-        
+        const {message} = await Settings.llm.chat({
+            messages: [{
+                role: "user",
+                content: prompt,}],
+        });
+
+        const mazeGenerationScript = message.content.toString();
+        console.log(mazeGenerationScript)
+
         // Execute the script in a Devbox
         const devbox = await runloop.devboxes.createAndAwaitRunning();
         console.log(`Devbox ID: ${devbox.id}`);
@@ -45,7 +38,7 @@ async function generateMazeCreator() {
         });
 
         const { exit_status, stdout, stderr } = await runloop.devboxes.executeSync(devbox.id, {
-            command: "python gen_maze.py --size 11",
+            command: "python gen_maze.py --size 10",
         });
 
         exit_status === 0

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Computer Use Demo</title>
+        <meta name="permissions-policy" content="fullscreen=*" />
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            .container {
+                display: flex;
+                height: 100vh;
+                width: 100vw;
+            }
+            .left {
+                flex: 1;
+                border: none;
+                height: 100vh;
+            }
+            .right {
+                flex: 2;
+                border: none;
+                height: 100vh;
+                pointer-events: auto; /* Ensure click events are passed */
+            }
+            #vnc {
+                width: 100%;
+                height: 100%;
+                border: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <!-- Sidebar (Optional) -->
+            <iframe src="http://localhost:8501" class="left" allow="fullscreen"></iframe>
+
+            <!-- Interactive Chrome Session -->
+            <iframe id="vnc" class="right" allow="fullscreen"></iframe>
+        </div>
+
+        <button
+            id="toggleViewOnly"
+            style="position: absolute; top: 10px; right: 10px; z-index: 1000"
+        >
+            Toggle Screen Control (Off)
+        </button>
+
+        <script>
+            function updateVncUrl(viewOnly = 1) {
+                fetch('/env')
+                    .then(response => response.json())
+                    .then(data => {
+                        const vncUrl = data.VNC_URL;
+                        if (vncUrl) {
+                            const iframe = document.getElementById("vnc");
+                            iframe.src = `${vncUrl}&view_only=${viewOnly}`;
+                        } else {
+                        }
+                    })
+                    .catch(error => console.error("Error loading VNC URL:", error));
+            }
+
+            // Load VNC URL on page load
+            document.addEventListener("DOMContentLoaded", function () {
+                updateVncUrl();
+            });
+
+            document.getElementById("toggleViewOnly").addEventListener("click", function () {
+                var iframe = document.getElementById("vnc");
+                var button = document.getElementById("toggleViewOnly");
+
+                if (iframe.src.includes("view_only=1")) {
+                    updateVncUrl(0); // Enable interaction
+                    button.innerText = "Toggle Screen Control (On)";
+                } else {
+                    updateVncUrl(1); // Disable interaction
+                    button.innerText = "Toggle Screen Control (Off)";
+                }
+            });
+        </script>
+    </body>
+</html>
