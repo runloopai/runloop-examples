@@ -20,11 +20,9 @@ async function generateMazeCreator() {
 
     try{
         const {message} = await Settings.llm.chat({
-            messages: [
-                {
-                    role: "user",
-                    content: prompt,
-                }],
+            messages: [{
+                role: "user",
+                content: prompt,}],
         });
 
         const mazeGenerationScript = message.content.toString();

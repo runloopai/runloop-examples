@@ -21,15 +21,13 @@ async function generateMazeCreator() {
             max_tokens: 1000,
             temperature: 0,
             system: "Respond only with code. Do not include any markdown or comments.",
-            messages: [
-                {
+            messages: [{
                 "role": "user",
                 "content": [
                     {
                     "type": "text",
                     "text": prompt
-                    }
-                ]
+                    }]
                 }
             ]
             });
