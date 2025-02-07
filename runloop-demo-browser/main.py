@@ -1,11 +1,14 @@
 import subprocess
 import time
+import logging
 import os
 from runloop_api_client import Runloop
 from dotenv import load_dotenv
 from http_server import start_server
 
 load_dotenv()
+
+logger = logging.getLogger("browser-demo")
 
 client = Runloop(
     bearer_token=os.getenv("RUNLOOP_API_KEY"),
@@ -14,6 +17,7 @@ client = Runloop(
 
 
 def initialize_devbox():
+    logger.info("Creating new devbox on Runloop ...")
     browser = client.devboxes.browsers.create()
     client.devboxes.await_running(browser.devbox.id)
 
@@ -28,6 +32,7 @@ def initialize_devbox():
 
 def start_streamlit():
     """Starts the Streamlit app in a background process."""
+    logger.info("Starting streamlit process ...")
     streamlit_cmd = [
         "python",
         "-m",
@@ -44,6 +49,10 @@ def start_streamlit():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
+    logger.info("Starting Runloop browser demo")
+
     connection_info = initialize_devbox()
     os.environ["DEVBOX"] = connection_info["DEVBOX"]
     os.environ["CDP_URL"] = connection_info["CDP_URL"]

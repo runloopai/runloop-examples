@@ -1,9 +1,12 @@
 from runloop_api_client import Runloop
+import logging
 import os
 import time
 import subprocess
 from http_server import start_server
 from dotenv import load_dotenv
+
+logger = logging.getLogger("computer-demo")
 
 load_dotenv()
 
@@ -14,6 +17,7 @@ client = Runloop(
 
 
 def initialize_devbox():
+    logger.info("Creating new devbox on Runloop ...")
     computer = client.devboxes.computers.create()
     client.devboxes.await_running(computer.devbox.id)
 
@@ -24,6 +28,7 @@ def initialize_devbox():
 
 def start_streamlit():
     """Starts the Streamlit app in a background process."""
+    logger.info("Starting streamlit process ...")
     streamlit_cmd = [
         "python",
         "-m",
@@ -40,6 +45,9 @@ def start_streamlit():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    logger.info("Starting Runloop computer demo")
+
     connection_info = initialize_devbox()
     os.environ["DEVBOX"] = connection_info["DEVBOX"]
 
