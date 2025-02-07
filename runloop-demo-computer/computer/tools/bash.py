@@ -13,7 +13,8 @@ from runloop_api_client import Runloop
 dotenv.load_dotenv()
 
 runloop = Runloop(
-    bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro"
+    bearer_token=os.getenv("RUNLOOP_API_KEY"),
+    base_url=os.getenv("RUNLOOP_API_BASE_URL"),
 )
 
 DEVBOX = os.getenv("DEVBOX")
@@ -121,7 +122,8 @@ class BashTool(BaseAnthropicTool):
 
     # Initialize Runloop client
     runloop = Runloop(
-        bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro"
+        bearer_token=os.getenv("RUNLOOP_API_KEY"),
+        base_url=os.getenv("RUNLOOP_API_BASE_URL"),
     )
 
     class _BashSession:
