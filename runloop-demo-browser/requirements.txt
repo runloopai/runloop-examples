@@ -5,4 +5,4 @@ boto3>=1.28.57
 google-auth<3,>=2
 runloop_api_client==0.22.0
 python-dotenv==1.0.1
-playwright==1.49.1"
+playwright==1.47
