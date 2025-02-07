@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 client = Runloop(
-    bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro"
+    bearer_token=os.getenv("RUNLOOP_API_KEY"),
+    base_url=os.getenv("RUNLOOP_API_BASE_URL"),
 )
 
 
