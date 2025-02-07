@@ -1,6 +1,9 @@
 import http.server
 import socketserver
 import multiprocessing
+import logging
+
+logger = logging.getLogger(__name__)
 
 PORT = 8080
 
@@ -44,6 +47,7 @@ def run_server(vnc_url):
 
 def start_server(vnc_url):
     """Starts the HTTP server in a background process and returns the process."""
+    logger.info("Starting http server ...")
     server_process = multiprocessing.Process(
         target=run_server, args=(vnc_url,), daemon=True
     )

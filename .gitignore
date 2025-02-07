@@ -33,4 +33,5 @@ build/
 *.log
 *.tmp
 
-
+runloop-demo-browser/screenshots
+runloop-demo-computer/screenshots
