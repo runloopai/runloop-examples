@@ -1,53 +1,56 @@
 from runloop_api_client import Runloop
 import os
+import time
+import subprocess
+from http_server import start_server
 from dotenv import load_dotenv
 load_dotenv()
 
+client = Runloop(bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro")
 
 def initialize_devbox():
-    client = Runloop(bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro")
-
     computer = client.devboxes.computers.create()
+    client.devboxes.await_running(computer.devbox.id)
 
-    response = client.devboxes.await_running(computer.devbox.id)
     vnc_port = computer.live_screen_url
-
-    print(computer)
 
     return {
         "VNC_URL": vnc_port,
         "DEVBOX": computer.devbox.id
     }
 
-def update_env_file(env_vars, env_file=".env"):
-    """
-    Updates the .env file with new values while preserving existing ones.
-    """
-    env_data = {}
 
-    # Read existing .env file if it exists
-    if os.path.exists(env_file):
-        with open(env_file, "r") as f:
-            for line in f:
-                if "=" in line:
-                    key, value = line.strip().split("=", 1)
-                    env_data[key] = value
+def start_streamlit():
+    """ Starts the Streamlit app in a background process. """
+    streamlit_cmd = ["python", "-m", "streamlit", "run", "computer/agent_streamlit.py", "--server.headless", "true"]
+    streamlit_log = open("/tmp/streamlit_stdout.log", "w")
+    return subprocess.Popen(streamlit_cmd, stdout=streamlit_log, stderr=subprocess.STDOUT)
 
-    # Update with new values
-    env_data.update(env_vars)
-
-    # Write back to .env file
-    with open(env_file, "w") as f:
-        for key, value in env_data.items():
-            f.write(f"{key}={value}\n")
 
 if __name__ == "__main__":
     connection_info = initialize_devbox()
+    os.environ["DEVBOX"] = connection_info["DEVBOX"]
+    
 
-    update_env_file(connection_info)
+    # Start Streamlit app
+    streamlit_process = start_streamlit()
 
-    print("Updated .env file successfully!")
+    # Start HTTP server
+    server_process = start_server(connection_info["VNC_URL"])
+    print("✨ Computer Use Demo is ready! ✨")
+    print("Open http://localhost:8080 in your browser to begin")
 
-
+    # Keep the main script running & handle termination
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Closing application processes...")
+        streamlit_process.terminate()
+        server_process.terminate()
+        streamlit_process.wait()
+        server_process.join()
+        client.devboxes.shutdown(connection_info["DEVBOX"])
+        print("Application stopped successfully.")
 
 

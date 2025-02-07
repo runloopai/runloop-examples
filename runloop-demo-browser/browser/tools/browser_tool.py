@@ -1,37 +1,12 @@
 from .base import BaseAnthropicTool, ToolResult, ToolError
 from playwright.async_api import async_playwright
-import os, asyncio, time, base64
+import os, base64
 import dotenv
 from typing import Literal, Optional
 dotenv.load_dotenv()
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 
 CDP_URL = os.getenv("CDP_URL")
-TOKEN_LIMIT_PER_MINUTE = 80000
-TOKENS_USED = 0
-RESET_TIME = time.time() + 60
 
-
-async def rate_limit_tokens(estimated_tokens: int):
-    """Ensures token usage stays below the limit per minute."""
-    global TOKENS_USED, RESET_TIME
-
-    current_time = time.time()
-    if current_time >= RESET_TIME:
-        TOKENS_USED = 0
-        RESET_TIME = current_time + 60
-
-    if TOKENS_USED + estimated_tokens > TOKEN_LIMIT_PER_MINUTE:
-        wait_time = RESET_TIME - current_time
-        await asyncio.sleep(wait_time)
-        TOKENS_USED = 0  
-
-    TOKENS_USED += estimated_tokens
 
 class BrowserTool(BaseAnthropicTool):
     """Tool for controlling a Playwright browser instance with persistent state."""
@@ -75,7 +50,6 @@ class BrowserTool(BaseAnthropicTool):
     async def goto(self, url: str) -> ToolResult:
         """Navigates to a URL using the already open browser."""
         await self.ensure_page()  # Make sure page is properly set before proceeding
-        await rate_limit_tokens(4000)
 
         try:
             await self.page.goto(url)
@@ -89,7 +63,6 @@ class BrowserTool(BaseAnthropicTool):
     async def click(self, selector: str) -> ToolResult:
         """Clicks an element ensuring visibility and focus."""
         await self.ensure_page()
-        await rate_limit_tokens(1000)
 
         try:
             element = self.page.locator(selector)
@@ -103,13 +76,12 @@ class BrowserTool(BaseAnthropicTool):
         except Exception as e:
             return ToolResult(error=f"Failed to click '{selector}': {str(e)}")
 
-    async def fill(self, selector: str, text: str) -> ToolResult:
+    async def type_text(self, selector: str, text: str) -> ToolResult:
         """Fills an input field."""
         await self.ensure_page()
-        await rate_limit_tokens(2000)
 
         try:
-            await self.page.fill(selector, text)
+            await self.page.type(selector, text)
             return ToolResult(output=f"Filled '{selector}' with '{text}'")
         except Exception as e:
             return ToolResult(error=f"Failed to fill '{selector}': {str(e)}")
@@ -117,7 +89,6 @@ class BrowserTool(BaseAnthropicTool):
     async def get_page_structure(self) -> ToolResult:
         """Extracts the full HTML content of the page."""
         await self.ensure_page()
-        await rate_limit_tokens(5000)
 
         try:
             await self.page.wait_for_load_state("networkidle", timeout=10000)
@@ -129,7 +100,6 @@ class BrowserTool(BaseAnthropicTool):
     async def screenshot(self, save_path: str = "screenshots/screenshot.png") -> ToolResult:
         """Takes a screenshot."""
         await self.ensure_page()  
-        await rate_limit_tokens(3000)
 
         try:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -141,23 +111,25 @@ class BrowserTool(BaseAnthropicTool):
         except Exception as e:
             return ToolResult(error=f"Failed to take screenshot: {str(e)}")
 
-    async def submit_search(self) -> ToolResult:
-        """Determines how to submit a search."""
+    async def submit_using_enter_key(self) -> ToolResult:
+        """Submits a search using the Enter key after filling the input field."""
         await self.ensure_page()
-        await rate_limit_tokens(1000)
 
         try:
-            search_button = self.page.locator('input[type="submit"], button[type="submit"]')
+            search_box = self.page.locator("textarea[name='q']")
 
-            if await search_button.count() > 0:
-                await search_button.first.click()
-                return ToolResult(output="Clicked the search button.")
-            
+            # Ensure the search box is focused before pressing enter
+            await search_box.click()
             await self.page.keyboard.press("Enter")
+
+            # Wait for the search results to load
+            await self.page.wait_for_load_state("domcontentloaded")
+
             return ToolResult(output="Pressed Enter to submit search.")
 
         except Exception as e:
             return ToolResult(error=f"Failed to submit search: {str(e)}")
+
 
 
     async def close(self):
@@ -174,7 +146,7 @@ class BrowserTool(BaseAnthropicTool):
     async def __call__(
         self,
         *,
-        command: Literal["start", "goto", "click", "get_latest_screenshot", "fill", "screenshot", "get_page_structure", "close", "submit_search"],
+        command: Literal["start", "goto", "click", "get_latest_screenshot", "type_text", "screenshot", "get_page_structure", "close", "submit_using_enter_key"],
         selector: Optional[str] = None,
         text: Optional[str] = None,
         url: Optional[str] = None,
@@ -188,16 +160,16 @@ class BrowserTool(BaseAnthropicTool):
                 return await self.goto(url)
             elif command == "click" and selector:
                 return await self.click(selector)
-            elif command == "fill" and selector and text:
-                return await self.fill(selector, text)
+            elif command == "type_text" and selector and text:
+                return await self.type_text(selector, text)
             elif command == "screenshot":
                 return await self.screenshot()
             elif command == "get_page_structure":
                 return await self.get_page_structure()
             elif command == "close":
                 return await self.close()
-            elif command == "submit_search":
-                return await self.submit_search()
+            elif command == "submit_using_enter_key":
+                return await self.submit_using_enter_key()
             else:
                 return ToolResult(error="Invalid command or missing parameters.")
         except Exception as e:
@@ -211,7 +183,7 @@ class BrowserTool(BaseAnthropicTool):
             "input_schema": {
                 "type": "object",
                 "properties": {
-                    "command": {"type": "string", "enum": ["start", "goto", "submit_search", "click", "fill", "screenshot", "get_page_structure", "close"]},
+                    "command": {"type": "string", "enum": ["start", "goto", "submit_using_enter_key", "click", "type_text", "screenshot", "get_page_structure", "close"]},
                     "selector": {"type": "string"},
                     "text": {"type": "string"},
                     "url": {"type": "string"},
