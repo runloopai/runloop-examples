@@ -14,7 +14,7 @@ def initialize_devbox():
     client.devboxes.await_running(browser.devbox.id)
     
     vnc_url = browser.live_view_url
-    print(vnc_url)
+
     return {
         "DEVBOX": browser.devbox.id,
         "CDP_URL": browser.connection_url,

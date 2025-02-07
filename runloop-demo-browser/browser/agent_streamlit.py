@@ -69,9 +69,7 @@ def setup_state():
         # Try to load API key from file first, then environment
         st.session_state.api_key = os.getenv("ANTHROPIC_API_KEY", "")
     if "provider" not in st.session_state:
-        st.session_state.provider = (
-            os.getenv("API_PROVIDER", "anthropic") or APIProvider.ANTHROPIC
-        )
+        st.session_state.provider = (os.getenv("API_PROVIDER", "anthropic") or APIProvider.ANTHROPIC)
     if "provider_radio" not in st.session_state:
         st.session_state.provider_radio = st.session_state.provider
     if "model" not in st.session_state:
@@ -104,7 +102,7 @@ async def main():
 
     st.markdown(STREAMLIT_STYLE, unsafe_allow_html=True)
 
-    st.title("Claude Computer Use Demo")
+    st.title("Browser Use Demo")
 
     if not os.getenv("HIDE_WARNING", False):
         st.warning(WARNING_TEXT)
@@ -145,7 +143,7 @@ async def main():
         st.text_area(
             "Custom System Prompt Suffix",
             key="custom_system_prompt",
-            help="Additional instructions to append to the system prompt. see computer_use_demo/loop.py for the base system prompt.",
+            help="Additional instructions to append to the system prompt. see browser/loop.py for the base system prompt.",
             on_change=lambda: save_to_storage(
                 "system_prompt", st.session_state.custom_system_prompt
             ),
@@ -171,9 +169,7 @@ async def main():
             st.session_state.auth_validated = True
 
     chat, http_logs = st.tabs(["Chat", "HTTP Exchange Logs"])
-    new_message = st.chat_input(
-        "Type a message to send to Claude to control the computer..."
-    )
+    new_message = st.chat_input("Type a message to send to Claude to control the browser...")
 
     with chat:
         # render past chats

@@ -76,7 +76,7 @@ class BrowserTool(BaseAnthropicTool):
         except Exception as e:
             return ToolResult(error=f"Failed to click '{selector}': {str(e)}")
 
-    async def type(self, selector: str, text: str) -> ToolResult:
+    async def type_text(self, selector: str, text: str) -> ToolResult:
         """Fills an input field."""
         await self.ensure_page()
 
@@ -146,7 +146,7 @@ class BrowserTool(BaseAnthropicTool):
     async def __call__(
         self,
         *,
-        command: Literal["start", "goto", "click", "get_latest_screenshot", "fill", "screenshot", "get_page_structure", "close", "submit_using_enter_key"],
+        command: Literal["start", "goto", "click", "get_latest_screenshot", "type_text", "screenshot", "get_page_structure", "close", "submit_using_enter_key"],
         selector: Optional[str] = None,
         text: Optional[str] = None,
         url: Optional[str] = None,
@@ -160,8 +160,8 @@ class BrowserTool(BaseAnthropicTool):
                 return await self.goto(url)
             elif command == "click" and selector:
                 return await self.click(selector)
-            elif command == "type" and selector and text:
-                return await self.type(selector, text)
+            elif command == "type_text" and selector and text:
+                return await self.type_text(selector, text)
             elif command == "screenshot":
                 return await self.screenshot()
             elif command == "get_page_structure":
@@ -183,7 +183,7 @@ class BrowserTool(BaseAnthropicTool):
             "input_schema": {
                 "type": "object",
                 "properties": {
-                    "command": {"type": "string", "enum": ["start", "goto", "submit_using_enter_key", "click", "type", "screenshot", "get_page_structure", "close"]},
+                    "command": {"type": "string", "enum": ["start", "goto", "submit_using_enter_key", "click", "type_text", "screenshot", "get_page_structure", "close"]},
                     "selector": {"type": "string"},
                     "text": {"type": "string"},
                     "url": {"type": "string"},
