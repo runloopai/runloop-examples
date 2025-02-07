@@ -1,9 +1,9 @@
 import http.server
 import socketserver
 import multiprocessing
-import os
 
 PORT = 8080
+
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, vnc_url=None, **kwargs):
@@ -28,18 +28,24 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         else:
             super().do_GET()
 
+
 class CustomHTTPServer(socketserver.TCPServer):
     allow_reuse_address = True  # Allows reusing the same port after shutdown
 
+
 def run_server(vnc_url):
-    handler = lambda *args, **kwargs: CustomHandler(*args, vnc_url=vnc_url, **kwargs)
+    def handler(*args, **kwargs):
+        return CustomHandler(*args, vnc_url=vnc_url, **kwargs)
 
     # Bind to IPv4 and IPv6 to ensure accessibility
     with CustomHTTPServer(("127.0.0.1", PORT), handler) as httpd:
         httpd.serve_forever()
 
+
 def start_server(vnc_url):
-    """ Starts the HTTP server in a background process and returns the process. """
-    server_process = multiprocessing.Process(target=run_server, args=(vnc_url,), daemon=True)
+    """Starts the HTTP server in a background process and returns the process."""
+    server_process = multiprocessing.Process(
+        target=run_server, args=(vnc_url,), daemon=True
+    )
     server_process.start()
     return server_process

@@ -31,6 +31,7 @@ from anthropic.types.beta import (
 
 from tools import BashTool, ComputerTool, EditTool, ToolCollection, ToolResult
 from dotenv import load_dotenv
+
 load_dotenv()
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 PROMPT_CACHING_BETA_FLAG = "prompt-caching-2024-07-31"
@@ -62,7 +63,7 @@ SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
 * When using your bash tool with commands that are expected to output very large quantities of text, redirect into a tmp file and use str_replace_editor or `grep -n -B <lines before> -A <lines after> <query> <filename>` to confirm output.
 * When viewing a page it can be helpful to zoom out so that you can see everything on the page.  Either that, or make sure you scroll down to see everything before deciding something isn't available.
 * When using your computer function calls, they take a while to run and send back to you.  Where possible/feasible, try to chain multiple of these calls all into one function calls request.
-* The current date is {datetime.today().strftime('%A, %B %-d, %Y')}.
+* The current date is {datetime.today().strftime("%A, %B %-d, %Y")}.
 </SYSTEM_CAPABILITY>
 
 <IMPORTANT>
@@ -270,7 +271,7 @@ def _make_api_tool_result(
     """Convert an agent ToolResult to an API ToolResultBlockParam."""
     tool_result_content: list[BetaTextBlockParam | BetaImageBlockParam] | str = []
     is_error = False
-    if  result.error:
+    if result.error:
         is_error = True
         tool_result_content = _maybe_prepend_system_tool_result(result, result.error)
     else:

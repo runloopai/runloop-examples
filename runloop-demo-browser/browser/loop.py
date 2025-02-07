@@ -7,8 +7,6 @@ from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
 from typing import Any, cast
-import os
-from runloop_api_client import Runloop
 
 import httpx
 from anthropic import (
@@ -35,6 +33,7 @@ from tools import ToolCollection, ToolResult, BrowserTool
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 PROMPT_CACHING_BETA_FLAG = "prompt-caching-2024-07-31"
+
 
 class APIProvider(StrEnum):
     ANTHROPIC = "anthropic"
@@ -63,7 +62,7 @@ SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
 * When navigating the web, avoid taking shortcuts such as using the `goto` tool to directly navigate to URLs. Instead, type the URL or search term into the address bar, press Enter, wait for the page to load, and then interact with the page elements as a human would.
 * If any one tool fails, use other available tools to reach the desired outcome.
 * Your browser function calls take time to process. Optimize efficiency by chaining multiple function calls into a single request where possible.
-* The current date is {datetime.today().strftime('%A, %B %-d, %Y')}.
+* The current date is {datetime.today().strftime("%A, %B %-d, %Y")}.
 </SYSTEM_CAPABILITY>
 
 <IMPORTANT>
@@ -92,10 +91,8 @@ async def sampling_loop(
     """
     Agentic sampling loop for the assistant/tool interaction of computer use.
     """
-    tool_collection = ToolCollection(
-        BrowserTool()
-    )
-    
+    tool_collection = ToolCollection(BrowserTool())
+
     system = BetaTextBlockParam(
         type="text",
         text=f"{SYSTEM_PROMPT}{' ' + system_prompt_suffix if system_prompt_suffix else ''}",
@@ -306,5 +303,3 @@ def _maybe_prepend_system_tool_result(result: ToolResult, result_text: str):
     if result.system:
         result_text = f"<system>{result.system}</system>\n{result_text}"
     return result_text
-
-

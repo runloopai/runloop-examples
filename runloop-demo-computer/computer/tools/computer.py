@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Literal, TypedDict
 from uuid import uuid4
 import dotenv
-dotenv.load_dotenv()
 
 from anthropic.types.beta import BetaToolComputerUse20241022Param
 
@@ -16,7 +15,11 @@ from .base import BaseAnthropicTool, ToolError, ToolResult
 from .run import run
 from runloop_api_client import Runloop
 
-runloop = Runloop(bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro")
+dotenv.load_dotenv()
+
+runloop = Runloop(
+    bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro"
+)
 
 OUTPUT_DIR = "/tmp/computer_outputs"
 
@@ -97,7 +100,7 @@ class ComputerTool(BaseAnthropicTool):
 
     def __init__(self):
         super().__init__()
-        #WE NEED TO GET THE WIDTH AND HEIGHT OF THE SCREEN TO ALIGN WITH THE VALUE IN THE DEVBOX
+        # WE NEED TO GET THE WIDTH AND HEIGHT OF THE SCREEN TO ALIGN WITH THE VALUE IN THE DEVBOX
         self.width = int(os.getenv("WIDTH") or 0)
         self.height = int(os.getenv("HEIGHT") or 0)
         assert self.width and self.height, "WIDTH, HEIGHT must be set"
@@ -198,7 +201,7 @@ class ComputerTool(BaseAnthropicTool):
                 return await self.shell(f"{self.xdotool} click {click_arg}")
 
         raise ToolError(f"Invalid action: {action}")
-    
+
     # MAKE THE SCREENSHOT FUNCTION TAKE THE SHOT FROM THE DEVBOX
     async def screenshot(self):
         """Take a screenshot of the current screen and return the base64 encoded image."""
@@ -225,17 +228,12 @@ class ComputerTool(BaseAnthropicTool):
 
         # Download the file and encode it in base64
         try:
-            downloaded_file = runloop.devboxes.download_file(
-                DEVBOX, path=str(path)
-            )
-
+            downloaded_file = runloop.devboxes.download_file(DEVBOX, path=str(path))
 
             base64_image = base64.b64encode(downloaded_file.read()).decode()
 
             # Replace the result with the base64 image
-            return result.replace(
-                base64_image=base64_image
-            )
+            return result.replace(base64_image=base64_image)
         except Exception as e:
             # Handle failure to take or download the screenshot
             raise ToolError(f"Failed to take screenshot: {e}")

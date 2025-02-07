@@ -69,7 +69,9 @@ def setup_state():
         # Try to load API key from file first, then environment
         st.session_state.api_key = os.getenv("ANTHROPIC_API_KEY", "")
     if "provider" not in st.session_state:
-        st.session_state.provider = (os.getenv("API_PROVIDER", "anthropic") or APIProvider.ANTHROPIC)
+        st.session_state.provider = (
+            os.getenv("API_PROVIDER", "anthropic") or APIProvider.ANTHROPIC
+        )
     if "provider_radio" not in st.session_state:
         st.session_state.provider_radio = st.session_state.provider
     if "model" not in st.session_state:
@@ -169,7 +171,9 @@ async def main():
             st.session_state.auth_validated = True
 
     chat, http_logs = st.tabs(["Chat", "HTTP Exchange Logs"])
-    new_message = st.chat_input("Type a message to send to Claude to control the browser...")
+    new_message = st.chat_input(
+        "Type a message to send to Claude to control the browser..."
+    )
 
     with chat:
         # render past chats
@@ -236,6 +240,7 @@ async def main():
                 only_n_most_recent_images=st.session_state.only_n_most_recent_images,
             )
 
+
 # function provides context to the model about interruptions by the user or tool errors
 def maybe_add_interruption_blocks():
     if not st.session_state.in_sampling_loop:
@@ -262,7 +267,6 @@ def maybe_add_interruption_blocks():
         result.append(BetaTextBlockParam(type="text", text=INTERRUPT_TEXT))
 
     return result
-
 
 
 @contextmanager
@@ -342,8 +346,8 @@ def _tool_output_callback(
 ):
     """Handle a tool output by storing it to state and rendering it."""
     if not tool_output.output and not tool_output.error:
-        return 
-    
+        return
+
     tool_state[tool_id] = tool_output
     _render_message(Sender.TOOL, tool_output)
 
@@ -417,10 +421,10 @@ def _render_message(
             if message["type"] == "text":
                 st.write(message["text"])
             elif message["type"] == "tool_use":
-                st.code(f'Tool Use: {message["name"]}\nInput: {message["input"]}')
+                st.code(f"Tool Use: {message['name']}\nInput: {message['input']}")
             else:
                 # only expected return types are text and tool_use
-                raise Exception(f'Unexpected response type {message["type"]}')
+                raise Exception(f"Unexpected response type {message['type']}")
         else:
             st.markdown(message)
 
