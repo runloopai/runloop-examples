@@ -8,9 +8,9 @@ from .base import BaseAnthropicTool, CLIResult, ToolError, ToolResult
 import uuid
 import dotenv
 
-dotenv.load_dotenv()
-
 from runloop_api_client import Runloop
+
+dotenv.load_dotenv()
 
 runloop = Runloop(
     bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro"

@@ -9,13 +9,13 @@ from typing import Literal, TypedDict
 from uuid import uuid4
 import dotenv
 
-dotenv.load_dotenv()
-
 from anthropic.types.beta import BetaToolComputerUse20241022Param
 
 from .base import BaseAnthropicTool, ToolError, ToolResult
 from .run import run
 from runloop_api_client import Runloop
+
+dotenv.load_dotenv()
 
 runloop = Runloop(
     bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro"

@@ -15,7 +15,6 @@ from pathlib import PosixPath
 from typing import cast
 from dotenv import load_dotenv
 
-load_dotenv()
 import httpx
 import streamlit as st
 from anthropic import RateLimitError
@@ -32,6 +31,8 @@ from loop import (
     sampling_loop,
 )
 from tools import ToolResult
+
+load_dotenv()
 
 CONFIG_DIR = PosixPath("~/.anthropic").expanduser()
 DEVBOX = os.getenv("DEVBOX")

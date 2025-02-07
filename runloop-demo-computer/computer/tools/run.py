@@ -38,33 +38,30 @@ async def run(
     truncate_after: int | None = MAX_RESPONSE_LEN,
 ):
     """Run a shell command asynchronously with a timeout."""
-    try:
-        response = runloop.devboxes.execute_sync(
-            os.getenv("DEVBOX"), command=cmd, timeout=timeout
-        )
-        logger.error(response)
-        logger.error(response.stdout)
-        logger.error(response.stderr)
-        # Prepare stdout and stderr
-        stdout = response.stdout or b""  # Default to empty bytes if None or empty
-        stderr = response.stderr or b""  # Default to empty bytes if None or empty
+    response = runloop.devboxes.execute_sync(
+        os.getenv("DEVBOX"), command=cmd, timeout=timeout
+    )
+    logger.error(response)
+    logger.error(response.stdout)
+    logger.error(response.stderr)
+    # Prepare stdout and stderr
+    stdout = response.stdout or b""  # Default to empty bytes if None or empty
+    stderr = response.stderr or b""  # Default to empty bytes if None or empty
 
-        # Ensure stdout and stderr are bytes (since asyncio returns byte streams)
-        if isinstance(stdout, str):
-            stdout = stdout.encode()  # Convert string to bytes
-        if isinstance(stderr, str):
-            stderr = stderr.encode()  # Convert string to bytes
+    # Ensure stdout and stderr are bytes (since asyncio returns byte streams)
+    if isinstance(stdout, str):
+        stdout = stdout.encode()  # Convert string to bytes
+    if isinstance(stderr, str):
+        stderr = stderr.encode()  # Convert string to bytes
 
-        # Truncate stdout and stderr if specified
-        if truncate_after:
-            stdout = stdout[:truncate_after]
-            stderr = stderr[:truncate_after]
+    # Truncate stdout and stderr if specified
+    if truncate_after:
+        stdout = stdout[:truncate_after]
+        stderr = stderr[:truncate_after]
 
-        # Return the tuple (exit_status, stdout, stderr)
-        return (
-            response.exit_status or 0,  # Default to 0 if exit_status is None
-            stdout,
-            stderr,
-        )
-    except:
-        pass
+    # Return the tuple (exit_status, stdout, stderr)
+    return (
+        response.exit_status or 0,  # Default to 0 if exit_status is None
+        stdout,
+        stderr,
+    )

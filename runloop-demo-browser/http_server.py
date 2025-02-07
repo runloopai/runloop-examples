@@ -34,7 +34,8 @@ class CustomHTTPServer(socketserver.TCPServer):
 
 
 def run_server(vnc_url):
-    handler = lambda *args, **kwargs: CustomHandler(*args, vnc_url=vnc_url, **kwargs)
+    def handler(*args, **kwargs):
+        return CustomHandler(*args, vnc_url=vnc_url, **kwargs)
 
     # Bind to IPv4 and IPv6 to ensure accessibility
     with CustomHTTPServer(("127.0.0.1", PORT), handler) as httpd:
