@@ -14,6 +14,7 @@ from functools import partial
 from pathlib import PosixPath
 from typing import cast
 from dotenv import load_dotenv
+
 load_dotenv()
 import httpx
 import streamlit as st
@@ -31,7 +32,7 @@ from loop import (
     sampling_loop,
 )
 from tools import ToolResult
- 
+
 CONFIG_DIR = PosixPath("~/.anthropic").expanduser()
 DEVBOX = os.getenv("DEVBOX")
 API_KEY_FILE = CONFIG_DIR / "api_key"
@@ -242,6 +243,7 @@ async def main():
                 only_n_most_recent_images=st.session_state.only_n_most_recent_images,
             )
 
+
 # function provides context to the model about interruptions by the user or tool errors
 def maybe_add_interruption_blocks():
     if not st.session_state.in_sampling_loop:
@@ -416,10 +418,10 @@ def _render_message(
             if message["type"] == "text":
                 st.write(message["text"])
             elif message["type"] == "tool_use":
-                st.code(f'Tool Use: {message["name"]}\nInput: {message["input"]}')
+                st.code(f"Tool Use: {message['name']}\nInput: {message['input']}")
             else:
                 # only expected return types are text and tool_use
-                raise Exception(f'Unexpected response type {message["type"]}')
+                raise Exception(f"Unexpected response type {message['type']}")
         else:
             st.markdown(message)
 

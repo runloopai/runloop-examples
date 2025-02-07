@@ -4,9 +4,13 @@ import time
 import subprocess
 from http_server import start_server
 from dotenv import load_dotenv
+
 load_dotenv()
 
-client = Runloop(bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro")
+client = Runloop(
+    bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro"
+)
+
 
 def initialize_devbox():
     computer = client.devboxes.computers.create()
@@ -14,23 +18,29 @@ def initialize_devbox():
 
     vnc_port = computer.live_screen_url
 
-    return {
-        "VNC_URL": vnc_port,
-        "DEVBOX": computer.devbox.id
-    }
+    return {"VNC_URL": vnc_port, "DEVBOX": computer.devbox.id}
 
 
 def start_streamlit():
-    """ Starts the Streamlit app in a background process. """
-    streamlit_cmd = ["python", "-m", "streamlit", "run", "computer/agent_streamlit.py", "--server.headless", "true"]
+    """Starts the Streamlit app in a background process."""
+    streamlit_cmd = [
+        "python",
+        "-m",
+        "streamlit",
+        "run",
+        "computer/agent_streamlit.py",
+        "--server.headless",
+        "true",
+    ]
     streamlit_log = open("/tmp/streamlit_stdout.log", "w")
-    return subprocess.Popen(streamlit_cmd, stdout=streamlit_log, stderr=subprocess.STDOUT)
+    return subprocess.Popen(
+        streamlit_cmd, stdout=streamlit_log, stderr=subprocess.STDOUT
+    )
 
 
 if __name__ == "__main__":
     connection_info = initialize_devbox()
     os.environ["DEVBOX"] = connection_info["DEVBOX"]
-    
 
     # Start Streamlit app
     streamlit_process = start_streamlit()
@@ -52,5 +62,3 @@ if __name__ == "__main__":
         server_process.join()
         client.devboxes.shutdown(connection_info["DEVBOX"])
         print("Application stopped successfully.")
-
-

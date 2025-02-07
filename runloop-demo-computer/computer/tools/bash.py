@@ -5,17 +5,19 @@ from typing import ClassVar, Literal
 from anthropic.types.beta import BetaToolBash20241022Param
 
 from .base import BaseAnthropicTool, CLIResult, ToolError, ToolResult
-import random
-import string
 import uuid
 import dotenv
+
 dotenv.load_dotenv()
 
 from runloop_api_client import Runloop
 
-runloop = Runloop(bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro")
+runloop = Runloop(
+    bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro"
+)
 
 DEVBOX = os.getenv("DEVBOX")
+
 
 class _BashSession:
     """A session of a bash shell."""
@@ -59,22 +61,23 @@ class _BashSession:
             )
 
         try:
-            async with asyncio.timeout(self._timeout):                
+            async with asyncio.timeout(self._timeout):
                 cmd_result = runloop.devboxes.execute_sync(DEVBOX, command=command)
-                output = cmd_result.stdout   
+                output = cmd_result.stdout
 
                 if output.endswith("\n"):
                     output = output[:-1]
 
                 error = cmd_result.stderr
                 if cmd_result.exit_status:
-                    error = error[:-1]   
+                    error = error[:-1]
                 return CLIResult(output=output, error=error)
         except asyncio.TimeoutError:
             self._timed_out = True
             raise ToolError(
                 f"timed out: bash has not returned in {self._timeout} seconds and must be restarted",
             ) from None
+
 
 class BashTool(BaseAnthropicTool):
     """
@@ -113,11 +116,13 @@ class BashTool(BaseAnthropicTool):
     def to_params(self) -> BetaToolBash20241022Param:
         return {
             "type": self.api_type,
-            "name": self.name,}
+            "name": self.name,
+        }
 
     # Initialize Runloop client
-    runloop = Runloop(bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro")
-
+    runloop = Runloop(
+        bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro"
+    )
 
     class _BashSession:
         """A session of a bash shell."""
@@ -159,7 +164,9 @@ class BashTool(BaseAnthropicTool):
                 async with asyncio.timeout(self._timeout):
                     cmd_result = runloop.devboxes.execute_sync(DEVBOX, command=command)
                     output = cmd_result.stdout.strip()
-                    error = cmd_result.stderr.strip() if cmd_result.exit_status else None
+                    error = (
+                        cmd_result.stderr.strip() if cmd_result.exit_status else None
+                    )
                     return CLIResult(output=output, error=error)
             except asyncio.TimeoutError:
                 self._timed_out = True
@@ -181,7 +188,9 @@ class BashTool(BaseAnthropicTool):
             self._session = None
             super().__init__()
 
-        async def __call__(self, command: str | None = None, restart: bool = False, **kwargs):
+        async def __call__(
+            self, command: str | None = None, restart: bool = False, **kwargs
+        ):
             """Execute a bash command or restart the session."""
             if restart:
                 if self._session:

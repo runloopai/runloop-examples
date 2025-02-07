@@ -6,6 +6,7 @@ from runloop_api_client import Runloop
 openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 runloop = Runloop(bearer_token=os.environ.get("RUNLOOP_API_KEY"))
 
+
 def generate_maze_creator():
     prompt = """Write a Python script that generates a maze. The script should:
     1. Accept a size parameter from command line arguments
@@ -21,7 +22,7 @@ def generate_maze_creator():
         response = openai.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0
+            temperature=0,
         )
         maze_generation_script = response.choices[0].message.content
 
@@ -29,13 +30,12 @@ def generate_maze_creator():
         devbox = runloop.devboxes.create_and_await_running()
         print("Devbox ID:", devbox.id)
 
-        runloop.devboxes.write_file_contents(devbox.id,
-         file_path= "gen_maze.py",
-         contents= maze_generation_script
-         )
+        runloop.devboxes.write_file_contents(
+            devbox.id, file_path="gen_maze.py", contents=maze_generation_script
+        )
 
-        result = runloop.devboxes.execute_sync(devbox.id,
-            command= "python gen_maze.py --size 10"
+        result = runloop.devboxes.execute_sync(
+            devbox.id, command="python gen_maze.py --size 10"
         )
 
         if not result.exit_status:
@@ -45,6 +45,7 @@ def generate_maze_creator():
 
     except Exception as e:
         print("Error:", e)
+
 
 if __name__ == "__main__":
     generate_maze_creator()
