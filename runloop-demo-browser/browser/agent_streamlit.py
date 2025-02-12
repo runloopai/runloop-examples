@@ -171,6 +171,7 @@ async def main(api_key: str, devbox_id: str, cdp_url: str, vnc_url: str):
                 response_state=st.session_state.responses,
             ),
             api_key=st.session_state.api_key,
+            cdp_url=cdp_url,
             only_n_most_recent_images=st.session_state.only_n_most_recent_images,
         )
 

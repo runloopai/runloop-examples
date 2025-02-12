@@ -7,8 +7,6 @@ from typing import Literal, Optional
 
 dotenv.load_dotenv()
 
-CDP_URL = os.getenv("CDP_URL")
-
 
 class BrowserTool(BaseAnthropicTool):
     """Tool for controlling a Playwright browser instance with persistent state."""
@@ -21,12 +19,13 @@ class BrowserTool(BaseAnthropicTool):
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, cdp_url: str):
         """Initialize browser state."""
         self.playwright = None
         self.browser = None
         self.context = None
         self.page = None
+        self.cdp_url = cdp_url
 
     async def start(self):
         """Ensures connection to an existing browser or starts a new one."""
@@ -37,7 +36,7 @@ class BrowserTool(BaseAnthropicTool):
             self.playwright = await async_playwright().start()
 
         try:
-            self.browser = await self.playwright.chromium.connect_over_cdp(CDP_URL)
+            self.browser = await self.playwright.chromium.connect_over_cdp(self.cdp_url)
             self.context = (
                 self.browser.contexts[0]
                 if self.browser.contexts

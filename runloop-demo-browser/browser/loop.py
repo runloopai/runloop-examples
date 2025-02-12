@@ -70,13 +70,14 @@ async def sampling_loop(
         [httpx.Request, httpx.Response | object | None, Exception | None], None
     ],
     api_key: str,
+    cdp_url: str,
     only_n_most_recent_images: int | None = None,
     max_tokens: int = 4096,
 ):
     """
     Agentic sampling loop for the assistant/tool interaction of computer use.
     """
-    tool_collection = ToolCollection(BrowserTool())
+    tool_collection = ToolCollection(BrowserTool(cdp_url))
     system = BetaTextBlockParam(
         type="text",
         text=f"{SYSTEM_PROMPT}{' ' + system_prompt_suffix if system_prompt_suffix else ''}",
