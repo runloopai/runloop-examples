@@ -1,11 +1,9 @@
-import subprocess
 import time
 import logging
 import os
+import subprocess
 from runloop_api_client import Runloop
 from dotenv import load_dotenv
-
-load_dotenv()
 
 logger = logging.getLogger("browser-demo")
 
@@ -16,20 +14,17 @@ client = Runloop(
 
 
 def initialize_devbox():
-    logger.info("Creating new devbox on Runloop ...")
+    """Starts a new Runloop Devbox with the browser extension installed.
+
+    Returns: (devbox_id, cdp_url, vnc_url)
+    """
     browser = client.devboxes.browsers.create()
     client.devboxes.await_running(browser.devbox.id)
-
     vnc_url = browser.live_view_url
-
-    return {
-        "DEVBOX": browser.devbox.id,
-        "CDP_URL": browser.connection_url,
-        "VNC_URL": vnc_url,
-    }
+    return browser.devbox.id, browser.connection_url, vnc_url
 
 
-def start_streamlit(url):
+def start_streamlit(api_key, devbox_id, cdp_url, vnc_url):
     """Starts the Streamlit app in a background process."""
     logger.info("Starting streamlit process ...")
     streamlit_cmd = [
@@ -38,38 +33,52 @@ def start_streamlit(url):
         "streamlit",
         "run",
         "browser/agent_streamlit.py",
-        url,
         "--server.headless",
         "true",
     ]
-    streamlit_log = open("/tmp/streamlit_stdout.log", "w")
+    env = {
+        "ANTHROPIC_API_KEY": api_key,
+        "DEVBOX_ID": devbox_id,
+        "CDP_URL": cdp_url,
+        "VNC_URL": vnc_url,
+    }
+    env.update(os.environ)
     return subprocess.Popen(
-        streamlit_cmd, stdout=streamlit_log, stderr=subprocess.STDOUT
+        streamlit_cmd,
+        stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
+        env=env,
     )
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-
     logger.info("Starting Runloop browser demo")
+    load_dotenv()
 
-    connection_info = initialize_devbox()
-    os.environ["DEVBOX"] = connection_info["DEVBOX"]
-    os.environ["CDP_URL"] = connection_info["CDP_URL"]
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        logger.error("ANTHROPIC_API_KEY is not set; please set it in your environment")
+        os.exit(1)
 
-    # Start Streamlit app
-    streamlit_process = start_streamlit(connection_info["VNC_URL"])
+    logger.info("Creating new devbox on Runloop ...")
+    devbox_id, cdp_url, vnc_url = initialize_devbox()
 
-    print("✨ Browser Use Demo is ready! ✨")
-    print("Open http://localhost:8501 in your browser to begin")
-
-    # Keep the main script running & handle termination
     try:
-        while True:
+        logger.info("Starting Streamlit app ...")
+        streamlit_process = start_streamlit(api_key, devbox_id, cdp_url, vnc_url)
+
+        print("✨ Browser Use Demo is ready! ✨")
+        print("Open http://localhost:8501 in your browser to begin")
+
+        # Keep the main script running & handle termination
+        try:
+            streamlit_process.wait()
+        except KeyboardInterrupt:
+            print("Closing application processes...")
+            streamlit_process.kill()
             time.sleep(1)
-    except KeyboardInterrupt:
-        print("Closing application processes...")
-        streamlit_process.terminate()
-        streamlit_process.wait()
-        client.devboxes.shutdown(connection_info["DEVBOX"])
+            streamlit_process.terminate()
+    finally:
+        client.devboxes.shutdown(devbox_id)
         print("Application stopped successfully.")

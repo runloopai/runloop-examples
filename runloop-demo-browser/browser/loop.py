@@ -2,23 +2,22 @@
 # Agentic sampling loop that calls the Anthropic API and local implementation of anthropic-defined computer use tools.
 # """
 
+import asyncio
+import json
 import platform
+import logging
 from collections.abc import Callable
 from datetime import datetime
-from enum import StrEnum
 from typing import Any, cast
 
 import httpx
 from anthropic import (
     Anthropic,
-    AnthropicBedrock,
-    AnthropicVertex,
     APIError,
     APIResponseValidationError,
     APIStatusError,
 )
 from anthropic.types.beta import (
-    BetaCacheControlEphemeralParam,
     BetaContentBlockParam,
     BetaImageBlockParam,
     BetaMessage,
@@ -31,22 +30,9 @@ from anthropic.types.beta import (
 
 from tools import ToolCollection, ToolResult, BrowserTool
 
+logger = logging.getLogger(__name__)
+
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
-PROMPT_CACHING_BETA_FLAG = "prompt-caching-2024-07-31"
-
-
-class APIProvider(StrEnum):
-    ANTHROPIC = "anthropic"
-    BEDROCK = "bedrock"
-    VERTEX = "vertex"
-
-
-PROVIDER_TO_DEFAULT_MODEL_NAME: dict[APIProvider, str] = {
-    APIProvider.ANTHROPIC: "claude-3-5-sonnet-20241022",
-    APIProvider.BEDROCK: "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    APIProvider.VERTEX: "claude-3-5-sonnet-v2@20241022",
-}
-
 
 # This system prompt is optimized for the Runloop Devbox environment in this repository and
 # specific tool combinations enabled.
@@ -76,7 +62,6 @@ SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
 async def sampling_loop(
     *,
     model: str,
-    provider: APIProvider,
     system_prompt_suffix: str,
     messages: list[BetaMessageParam],
     output_callback: Callable[[BetaContentBlockParam], None],
@@ -92,32 +77,19 @@ async def sampling_loop(
     Agentic sampling loop for the assistant/tool interaction of computer use.
     """
     tool_collection = ToolCollection(BrowserTool())
-
     system = BetaTextBlockParam(
         type="text",
         text=f"{SYSTEM_PROMPT}{' ' + system_prompt_suffix if system_prompt_suffix else ''}",
     )
+    betas = [COMPUTER_USE_BETA_FLAG]
+    image_truncation_threshold = only_n_most_recent_images or 0
+    client = Anthropic(api_key=api_key, max_retries=4)
+
+    if not messages:
+        await asyncio.sleep(1)
+        return []
 
     while True:
-        enable_prompt_caching = False
-        betas = [COMPUTER_USE_BETA_FLAG]
-        image_truncation_threshold = only_n_most_recent_images or 0
-        if provider == APIProvider.ANTHROPIC:
-            client = Anthropic(api_key=api_key, max_retries=4)
-            enable_prompt_caching = True
-        elif provider == APIProvider.VERTEX:
-            client = AnthropicVertex()
-        elif provider == APIProvider.BEDROCK:
-            client = AnthropicBedrock()
-
-        if enable_prompt_caching:
-            betas.append(PROMPT_CACHING_BETA_FLAG)
-            _inject_prompt_caching(messages)
-            # Because cached reads are 10% of the price, we don't think it's
-            # ever sensible to break the cache by truncating images
-            only_n_most_recent_images = 0
-            system["cache_control"] = {"type": "ephemeral"}
-
         if only_n_most_recent_images:
             _maybe_filter_to_n_most_recent_images(
                 messages,
@@ -130,6 +102,7 @@ async def sampling_loop(
         # implementation may be able call the SDK directly with:
         # `response = client.messages.create(...)` instead.
         try:
+            logger.info(f"Calling API with messages: {json.dumps(messages, indent=2)}")
             raw_response = client.beta.messages.with_raw_response.create(
                 max_tokens=max_tokens,
                 messages=messages,
@@ -150,7 +123,6 @@ async def sampling_loop(
         )
 
         response = raw_response.parse()
-
         response_params = _response_to_params(response)
         messages.append(
             {
@@ -212,7 +184,6 @@ def _maybe_filter_to_n_most_recent_images(
     )
 
     images_to_remove = total_images - images_to_keep
-    # for better cache behavior, we want to remove in chunks
     images_to_remove -= images_to_remove % min_removal_threshold
 
     for tool_result in tool_result_blocks:
@@ -237,30 +208,6 @@ def _response_to_params(
         else:
             res.append(cast(BetaToolUseBlockParam, block.model_dump()))
     return res
-
-
-def _inject_prompt_caching(
-    messages: list[BetaMessageParam],
-):
-    """
-    Set cache breakpoints for the 3 most recent turns
-    one cache breakpoint is left for tools/system prompt, to be shared across sessions
-    """
-
-    breakpoints_remaining = 3
-    for message in reversed(messages):
-        if message["role"] == "user" and isinstance(
-            content := message["content"], list
-        ):
-            if breakpoints_remaining:
-                breakpoints_remaining -= 1
-                content[-1]["cache_control"] = BetaCacheControlEphemeralParam(
-                    {"type": "ephemeral"}
-                )
-            else:
-                content[-1].pop("cache_control", None)
-                # we'll only every have one extra turn per loop
-                break
 
 
 def _make_api_tool_result(
