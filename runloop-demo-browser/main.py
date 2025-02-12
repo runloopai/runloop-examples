@@ -25,14 +25,18 @@ def initialize_devbox():
 
 
 def start_streamlit(api_key, devbox_id, cdp_url, vnc_url):
-    """Starts the Streamlit app in a background process."""
+    """Starts the Streamlit app in a background process.
+
+    Streamlit needs to be run in headless mode, and there isn't good support for doing so
+    from a library. So we run it as a subprocess instead.
+    """
     logger.info("Starting streamlit process ...")
     streamlit_cmd = [
         "python",
         "-m",
         "streamlit",
         "run",
-        "browser/agent_streamlit.py",
+        "streamlit_app.py",
         "--server.headless",
         "true",
     ]

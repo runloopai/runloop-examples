@@ -67,7 +67,7 @@ def setup_page(vnc_url):
     st.set_page_config(layout="wide")
     col1, col2 = st.columns([0.35, 0.65])
 
-    with open("browser/styles.css", "r") as f:
+    with open("styles.css", "r") as f:
         css = f.read()
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
