@@ -1,0 +1,182 @@
+.stApp {
+    margin: 0; /* Remove margin auto */
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow: hidden; /* Prevent unnecessary scrollbars */
+    background: linear-gradient(315deg, 
+        #050a1a 3%,   
+        #0c1c3d 20%,  
+        #163a69 50%,  
+        #1b4e8b 75%,  
+        #0a1628 98%   
+    );
+    background-size: 400% 400%;
+    background-attachment: fixed;
+    animation: gradientShift 15s ease infinite;
+    position: relative;
+    width: 100vw; /* Ensure it takes up the full viewport width */
+    height: 100vh; /* Ensure it takes up the full viewport height */
+    box-shadow: inset 0 0 60px rgba(0, 40, 80, 0.8);
+}
+
+
+/* Smooth Gradient Animation */
+@keyframes gradientShift {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+}
+
+/* Adding a Pulsating Radial Glow for 3D Effect */
+.stApp::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw; /* Ensure it does not overflow horizontally */
+    height: 100vh; /* Ensure it does not overflow vertically */
+    background: radial-gradient(circle, 
+        rgba(0, 150, 255, 0.2) 0%, 
+        rgba(0, 50, 150, 0) 70%);
+    opacity: 0.5;
+    filter: blur(50px);
+    animation: glowPulse 8s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+    0% { opacity: 0.3; transform: scale(1); }
+    100% { opacity: 0.5; transform: scale(1.1); }
+}
+
+/* Subtle Glass Reflection Effect */
+.stApp::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%; /* Reduce width to prevent overflow */
+    height: 100%;
+    background: linear-gradient(to right, 
+        rgba(255, 255, 255, 0.05) 10%, 
+        rgba(255, 255, 255, 0) 50%);
+    transform: skewX(-15deg); /* Reduce skew angle */
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+
+
+button[kind=header]:hover {
+    background-color: rgb(255, 51, 51);
+}
+
+
+
+/* Fix layout to ensure other elements remain fixed */
+.main .block-container {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    min-height: 0 !important; /* Fix potential flexbox overflow */
+    overflow: hidden !important;
+}
+
+
+
+/* Ensure columns remain fixed and do not resize */
+.st-emotion-cache-ocqkz7.e6rk8up0 {
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    height: 100vh !important;
+    min-height: 0 !important; /* Prevent scroll issues */
+    overflow: hidden !important;
+}
+
+
+/* Remove padding from horizontal blocks */
+.stHorizontalBlock.st-emotion-cache-ocqkz7.e6rk8up0 {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Hide the Streamlit deploy button */
+.stAppDeployButton {
+    visibility: hidden;
+}
+
+/* Sidebar styling */
+.stSidebar {
+    
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    box-sizing: border-box; /* Ensures padding does not add to total width */
+}
+
+
+
+/* Prevent the chat area from expanding */
+.stChatMessage {
+    max-height: 50vh !important; /* Prevent message overflow */
+    overflow-y: auto !important; /* Allow scrolling inside */
+    flex-grow: 0 !important; /* Prevent chat box from pushing other elements */
+}
+
+
+/* User messages */
+.stChatMessage.user {
+    background-color: rgba(0, 120, 215, 0.2);
+    color: black;
+}
+
+/* Assistant messages */
+.stChatMessage.assistant {
+    background-color: rgba(0, 200, 150, 0.2);
+    color: black;
+}
+
+/* Style the iFrame container */
+iframe {
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure the chat container has a fixed height and is scrollable */
+.stChatMessageContainer {
+    max-height: 50vh !important; /* Prevent chat from pushing the page down */
+    flex-grow: 1 !important;  /* Allow it to adjust inside a flex container */
+    overflow-y: auto !important;
+}
+
+
+/* Fix the side-by-side layout and prevent resizing */
+.st-emotion-cache-1y4p8pa {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+
+/* Ensure the second column (iframe/browser) remains fixed */
+.st-emotion-cache-2d4l25 {
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+
+button[kind=header]:hover {
+    background-color: rgb(255, 51, 51);
+}
+
+/* Hide the streamlit deploy button */
+.stAppDeployButton {
+    visibility: hidden;
+}
+
+.st-emotion-cache-2d4l25 {
+    flex-grow: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important; /* Prevent expansion */
+    overflow: hidden !important;
+}

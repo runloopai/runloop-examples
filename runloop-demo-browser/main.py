@@ -4,7 +4,6 @@ import logging
 import os
 from runloop_api_client import Runloop
 from dotenv import load_dotenv
-from http_server import start_server
 
 load_dotenv()
 
@@ -30,7 +29,7 @@ def initialize_devbox():
     }
 
 
-def start_streamlit():
+def start_streamlit(url):
     """Starts the Streamlit app in a background process."""
     logger.info("Starting streamlit process ...")
     streamlit_cmd = [
@@ -39,6 +38,7 @@ def start_streamlit():
         "streamlit",
         "run",
         "browser/agent_streamlit.py",
+        url,
         "--server.headless",
         "true",
     ]
@@ -58,12 +58,10 @@ if __name__ == "__main__":
     os.environ["CDP_URL"] = connection_info["CDP_URL"]
 
     # Start Streamlit app
-    streamlit_process = start_streamlit()
+    streamlit_process = start_streamlit(connection_info["VNC_URL"])
 
-    # Start HTTP server
-    server_process = start_server(connection_info["VNC_URL"])
     print("✨ Browser Use Demo is ready! ✨")
-    print("Open http://localhost:8080 in your browser to begin")
+    print("Open http://localhost:8501 in your browser to begin")
 
     # Keep the main script running & handle termination
     try:
@@ -72,8 +70,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Closing application processes...")
         streamlit_process.terminate()
-        server_process.terminate()
         streamlit_process.wait()
-        server_process.join()
         client.devboxes.shutdown(connection_info["DEVBOX"])
         print("Application stopped successfully.")

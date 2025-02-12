@@ -3,11 +3,9 @@ import logging
 import os
 import time
 import subprocess
-from http_server import start_server
 from dotenv import load_dotenv
 
 logger = logging.getLogger("computer-demo")
-
 load_dotenv()
 
 client = Runloop(
@@ -26,7 +24,7 @@ def initialize_devbox():
     return {"VNC_URL": vnc_port, "DEVBOX": computer.devbox.id}
 
 
-def start_streamlit():
+def start_streamlit(vnc_url):
     """Starts the Streamlit app in a background process."""
     logger.info("Starting streamlit process ...")
     streamlit_cmd = [
@@ -35,6 +33,7 @@ def start_streamlit():
         "streamlit",
         "run",
         "computer/agent_streamlit.py",
+        vnc_url,
         "--server.headless",
         "true",
     ]
@@ -45,19 +44,17 @@ def start_streamlit():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     logger.info("Starting Runloop computer demo")
 
     connection_info = initialize_devbox()
     os.environ["DEVBOX"] = connection_info["DEVBOX"]
 
     # Start Streamlit app
-    streamlit_process = start_streamlit()
+    streamlit_process = start_streamlit(connection_info["VNC_URL"])
 
     # Start HTTP server
-    server_process = start_server(connection_info["VNC_URL"])
     print("✨ Computer Use Demo is ready! ✨")
-    print("Open http://localhost:8080 in your browser to begin")
+    print("Open http://localhost:8501 in your browser to begin")
 
     # Keep the main script running & handle termination
     try:
@@ -66,8 +63,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Closing application processes...")
         streamlit_process.terminate()
-        server_process.terminate()
         streamlit_process.wait()
-        server_process.join()
         client.devboxes.shutdown(connection_info["DEVBOX"])
         print("Application stopped successfully.")

@@ -5,6 +5,7 @@ Entrypoint for streamlit, see https://docs.streamlit.io/
 import asyncio
 import base64
 import os
+import sys
 import traceback
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -12,10 +13,9 @@ from enum import StrEnum
 from functools import partial
 from pathlib import PosixPath
 from typing import cast
-
+from dotenv import load_dotenv
 import httpx
 import streamlit as st
-from streamlit.components.v1 import iframe
 from anthropic import RateLimitError
 from anthropic.types.beta import (
     BetaContentBlockParam,
@@ -31,25 +31,11 @@ from loop import (
 )
 from tools import ToolResult
 
+load_dotenv()
+
 CONFIG_DIR = PosixPath("~/.anthropic").expanduser()
+DEVBOX = os.getenv("DEVBOX")
 API_KEY_FILE = CONFIG_DIR / "api_key"
-STREAMLIT_STYLE = """
-<style>
-    /* Highlight the stop button in red */
-    button[kind=header] {
-        background-color: rgb(255, 75, 75);
-        border: 1px solid rgb(255, 75, 75);
-        color: rgb(255, 255, 255);
-    }
-    button[kind=header]:hover {
-        background-color: rgb(255, 51, 51);
-    }
-     /* Hide the streamlit deploy button */
-    .stAppDeployButton {
-        visibility: hidden;
-    }
-</style>
-"""
 
 WARNING_TEXT = "⚠️ Security Alert: Never provide access to sensitive accounts or data, as malicious web content can hijack Claude's behavior"
 INTERRUPT_TEXT = "(user stopped or interrupted and wrote the following)"
@@ -98,25 +84,42 @@ def _reset_model():
     ]
 
 
-def setup_page():
-    """Lay out our demo application.
+def setup_page(vnc_url):
+    """Lay out our demo application."""
 
-    We'll have a sidebar for configuration, a column of chat, and a column for the
-    browser iframe.
-
-    Returns the streamlit component where HTTP logs should be rendered.
-    """
     st.set_page_config(layout="wide")
-    col1, col2 = st.columns([1, 1])
-    st.title("Browser Use Demo")
+    col1, col2 = st.columns([0.35, 0.65])
+
+    with open("browser/styles.css", "r") as f:
+        css = f.read()
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
     with st.sidebar:
-        st.text_input(
-            "Anthropic API Key",
-            type="password",
-            key="api_key",
-            on_change=lambda: save_to_storage("api_key", st.session_state.api_key),
+
+        def _reset_api_provider():
+            if st.session_state.provider_radio != st.session_state.provider:
+                _reset_model()
+                st.session_state.provider = st.session_state.provider_radio
+                st.session_state.auth_validated = False
+
+        provider_options = [option.value for option in APIProvider]
+        st.radio(
+            "API Provider",
+            options=provider_options,
+            key="provider_radio",
+            format_func=lambda x: x.title(),
+            on_change=_reset_api_provider,
         )
+
+        st.text_input("Model", key="model")
+
+        if st.session_state.provider == APIProvider.ANTHROPIC:
+            st.text_input(
+                "Anthropic API Key",
+                type="password",
+                key="api_key",
+                on_change=lambda: save_to_storage("api_key", st.session_state.api_key),
+            )
 
         st.number_input(
             "Only send N most recent images",
@@ -127,26 +130,24 @@ def setup_page():
         st.text_area(
             "Custom System Prompt Suffix",
             key="custom_system_prompt",
-            help="Additional instructions to append to the system prompt. see browser/loop.py for the base system prompt.",
+            help="Additional instructions to append to the system prompt. See loop.py for the base system prompt.",
             on_change=lambda: save_to_storage(
                 "system_prompt", st.session_state.custom_system_prompt
             ),
         )
         st.checkbox("Hide screenshots", key="hide_images")
 
-        if st.button("Reset", type="primary"):
-            with st.spinner("Resetting..."):
-                # TODO(mikey): re-implement me
-                pass
-                # st.session_state.clear()
-                # setup_state()
-
-                # subprocess.run("pkill Xvfb; pkill tint2", shell=True)  # noqa: ASYNC221
-                # await asyncio.sleep(1)
-                # subprocess.run("./start_all.sh", shell=True)  # noqa: ASYNC221
-
     with col1:
-        st.markdown(STREAMLIT_STYLE, unsafe_allow_html=True)
+        st.markdown('<div class="left-column">', unsafe_allow_html=True)
+        st.title("Claude Computer Use Demo")
+
+        if not os.getenv("HIDE_WARNING", False):
+            st.warning(WARNING_TEXT)
+
+        # **Initialize new_message before the condition**
+        new_message = st.chat_input(
+            "Type a message to send to Claude to control the computer..."
+        )
 
         if not st.session_state.auth_validated:
             if auth_error := validate_auth(
@@ -156,13 +157,7 @@ def setup_page():
             else:
                 st.session_state.auth_validated = True
 
-        if not os.getenv("HIDE_WARNING", False):
-            st.warning(WARNING_TEXT)
-
-        chat, http_logs_box = st.tabs(["Chat", "HTTP Exchange Logs"])
-        new_message = st.chat_input(
-            "Type a message to send to Claude to control the browser..."
-        )
+        chat, http_logs = st.tabs(["Chat", "HTTP Exchange Logs"])
 
         with chat:
             # render past chats
@@ -184,35 +179,40 @@ def setup_page():
                                 cast(BetaContentBlockParam | ToolResult, block),
                             )
 
-            # render past http exchanges
-            for identity, (request, response) in st.session_state.responses.items():
-                _render_api_response(request, response, identity, http_logs_box)
+        # Render past HTTP exchanges
+        for identity, (request, response) in st.session_state.responses.items():
+            _render_api_response(request, response, identity, http_logs)
 
-            # render past chats
-            if new_message and new_message.strip():
-                st.session_state.messages.append(
-                    {
-                        "role": Sender.USER,
-                        "content": [
-                            *maybe_add_interruption_blocks(),
-                            BetaTextBlockParam(type="text", text=new_message),
-                        ],
-                    }
-                )
-                _render_message(Sender.USER, new_message)
-
+        # Handle new message
+        if new_message:
+            st.session_state.messages.append(
+                {
+                    "role": Sender.USER,
+                    "content": [
+                        *maybe_add_interruption_blocks(),
+                        BetaTextBlockParam(type="text", text=new_message),
+                    ],
+                }
+            )
+            _render_message(Sender.USER, new_message)
+        st.markdown("</div>", unsafe_allow_html=True)
     with col2:
-        iframe("https://www.example.com")
-
-    return http_logs_box
+        st.markdown('<div class="right-column">', unsafe_allow_html=True)
+        st.components.v1.iframe(
+            f"{vnc_url}?view_only=1", width=950, height=800, scrolling=False
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+    return http_logs
 
 
 async def main():
     """Render loop for streamlit"""
+    url = sys.argv[1]
     setup_state()
-    http_logs_box = setup_page()
+    http_logs = setup_page(url)
 
     with track_sampling_loop():
+        # run the agent sampling loop with the newest message
         st.session_state.messages = await sampling_loop(
             system_prompt_suffix=st.session_state.custom_system_prompt,
             model=st.session_state.model,
@@ -224,7 +224,7 @@ async def main():
             ),
             api_response_callback=partial(
                 _api_response_callback,
-                tab=http_logs_box,
+                tab=http_logs,
                 response_state=st.session_state.responses,
             ),
             api_key=st.session_state.api_key,
@@ -236,27 +236,27 @@ async def main():
 def maybe_add_interruption_blocks():
     if not st.session_state.in_sampling_loop:
         return []
-
+    # If this function is called while we're in the sampling loop, we can assume that the previous sampling loop was interrupted
+    # and we should annotate the conversation with additional context for the model and heal any incomplete tool use calls
     result = []
-    last_message = st.session_state.messages[-1]
-
-    previous_tool_use_ids = [
-        block["id"] for block in last_message["content"] if block["type"] == "tool_use"
-    ]
-    for tool_use_id in previous_tool_use_ids:
-        st.session_state.tools[tool_use_id] = ToolResult(error=INTERRUPT_TOOL_ERROR)
-        result.append(
-            BetaToolResultBlockParam(
-                tool_use_id=tool_use_id,
-                type="tool_result",
-                content=INTERRUPT_TOOL_ERROR,
-                is_error=True,
+    if st.session_state.messages:
+        last_message = st.session_state.messages[-1]
+        previous_tool_use_ids = [
+            block["id"]
+            for block in last_message["content"]
+            if block["type"] == "tool_use"
+        ]
+        for tool_use_id in previous_tool_use_ids:
+            st.session_state.tools[tool_use_id] = ToolResult(error=INTERRUPT_TOOL_ERROR)
+            result.append(
+                BetaToolResultBlockParam(
+                    tool_use_id=tool_use_id,
+                    type="tool_result",
+                    content=INTERRUPT_TOOL_ERROR,
+                    is_error=True,
+                )
             )
-        )
-
-    if INTERRUPT_TEXT.strip():  # Ensure we only add meaningful messages
-        result.append(BetaTextBlockParam(type="text", text=INTERRUPT_TEXT))
-
+    result.append(BetaTextBlockParam(type="text", text=INTERRUPT_TEXT))
     return result
 
 
@@ -271,23 +271,6 @@ def validate_auth(provider: APIProvider, api_key: str | None):
     if provider == APIProvider.ANTHROPIC:
         if not api_key:
             return "Enter your Anthropic API key in the sidebar to continue."
-    if provider == APIProvider.BEDROCK:
-        import boto3
-
-        if not boto3.Session().get_credentials():
-            return "You must have AWS credentials set up to use the Bedrock API."
-    if provider == APIProvider.VERTEX:
-        import google.auth
-        from google.auth.exceptions import DefaultCredentialsError
-
-        if not os.environ.get("CLOUD_ML_REGION"):
-            return "Set the CLOUD_ML_REGION environment variable to use the Vertex API."
-        try:
-            google.auth.default(
-                scopes=["https://www.googleapis.com/auth/cloud-platform"],
-            )
-        except DefaultCredentialsError:
-            return "Your google cloud credentials are not set up correctly."
 
 
 def load_from_storage(filename: str) -> str | None:
@@ -336,9 +319,6 @@ def _tool_output_callback(
     tool_output: ToolResult, tool_id: str, tool_state: dict[str, ToolResult]
 ):
     """Handle a tool output by storing it to state and rendering it."""
-    if not tool_output.output and not tool_output.error:
-        return
-
     tool_state[tool_id] = tool_output
     _render_message(Sender.TOOL, tool_output)
 
@@ -379,7 +359,10 @@ def _render_error(error: Exception):
         lines = "\n".join(traceback.format_exception(error))
         body += f"\n\n```{lines}```"
     save_to_storage(f"error_{datetime.now().timestamp()}.md", body)
-    st.error(f"**{error.__class__.__name__}**\n\n{body}", icon=":material/error:")
+    st.session_state.messages.append(
+        {"role": Sender.BOT, "content": f"⚠️ Error: {body}"}
+    )
+    # st.error(f"**{error.__class__.__name__}**\n\n{body}", icon=":material/error:")
 
 
 def _render_message(
