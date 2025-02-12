@@ -1,79 +1,93 @@
-# Runloop Browser Use Demo
+# Runloop Browser Demo
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+An example of an LLM-controlled interactive browser, using Runloop Devboxes, the Runloop Browser Add-On, and Streamlit for the UI.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Overview](#overview)
+- [Running the Demo](#running-the-demo)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [**Running the Project**](#running-the-project)
+- [Developer Notes](#developer-notes)
+  - [Code Structure](#code-structure)
+  - [How it works](#how-it-works)
+  - [Updating the TOC](#updating-the-toc)
+- [**License**](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Overview
 
-This repository provides a demonstration of remote browser automation using a Runloop Devbox in an isolated environment. The system enables AI-driven browser interactions by running Playwright and a Streamlit-based UI locally while controlling a remote browser instance in the Devbox.
+This demo shows how to use the following components together:
+* [Runloop Devboxes](https://docs.runloop.ai/) to run a browser on a remote, sandboxed virtual machine
+* Anthropic Claude as an AI agent to control the browser
+* Streamlit for the browser UI
 
-This setup uses a cloud-based sandbox environment, providing a structured and secure way to interact with a browser remotely while keeping execution isolated.
+## Running the Demo
 
-## Features
-
-- **Remote Browser Execution**: The browser runs in a secured Devbox environment, separate from local execution.
-- **Local Playwright Automation**: Playwright handles browser control, with all commands executed from the local environment.
-- **Streamlit User Interface**: A web-based interface facilitates interaction with the remote browser session.
-- **AI Integration**: The project includes an abstraction layer for AI-assisted automation.
-- **Secure & Isolated Execution**: The Devbox ensures no local browser state contamination, enhancing reproducibility.
-
-## Repository Structure
-```
-browser_demo/
-├── model/               # Directory for LLM-related files
-├── static_content/      # Directory for static HTML content
-├── .gitignore           # Specifies files to be ignored by Git
-├── LICENSE              # MIT License
-├── README.md            # Project documentation
-├── http_server.py       # Basic HTTP server implementation
-├── main.py              # Main script to run the application
-```
-
-
-## Prerequisites
+### Prerequisites
 
 Ensure you have the following:
-- **Python 3.12 or later**
-- **Git**
-- **Runloop API Key**
-- **LLM API KEY (Claude, Bedrock, Vertex)**
+- Python 3.12 or later
+- A Runloop account with access to the Runloop API
+- An Anthropic account with access to the Anthropic API
+
+### Setup
+
+Build the Python virtualenv:
+```sh
+python3 -m venv venv
+source venv/bin/activate
+```
+
+Install the dependencies:
+```sh
+pip install -r requirements.txt
+```
+
+Set up your API keys:
+```sh
+export RUNLOOP_API_KEY=<YOUR_RUNLOOP_KEY>
+export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_KEY>
+```
+
+(Alternatively, you can set the keys in a `.env` file.)
 
 
-## Installation & Setup
+### **Running the Project**
 
-1. **Clone the repository**:
-   ```sh
-   git clone https://github.com/runloopai/examples.git
-   cd runloop-demo-browser
+Launch the application:
+```sh
+python main.py
+```
 
-2. Set up a Python virtual environment:
-    ```sh
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-3. Install Python dependencies:
-    ```sh
-    pip install -r requirements.txt
-    ```
-4. Configure API keys: Create a .env file in the root directory and populate it with your credentials:
-    ```sh
-    RUNLOOP_API_KEY=<YOUR_RUNLOOP_KEY>
-    ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_KEY>
-    ```
+Open your browser and navigate to http://localhost:8051 to interact with the remote-controlled browser session.
 
-## **Running the Project**
+## Developer Notes
 
-1. Run the application:
-    ```bash
-    python main.py
-    ```
-2. Access the UI:
-    Open your browser and navigate to http://localhost:8080 to interact with the remote-controlled browser session.
+### Code Structure
 
-## **Development Notes**
+The code is organized as follows:
+* `main.py` -- The main program that sets up a devbox and runs the demo.
+* `streamlit_app.py` -- The Streamlit app that runs a local http server and the browser UI.
+* `loop.py` -- The main agent loop, interacting with Claude and the browser tool.
+* `tools.py` -- Classes to connect a remote browser instance to the Anthropic Claude agent.
+
+
+### How it works
 
 The remote browser runs inside the Devbox, while Playwright and the AI Agent run locally.
 Playwright interacts with the Chrome browser via Chrome DevTools Protocol (CDP)
 All UI and automation controls are handled locally, ensuring fast response times without exposing sensitive operations to the local machine.
+
+### Updating the TOC
+
+To update the table of contents in this README, run:
+```sh
+npx doctoc README.md --github
+```
 
 ## **License**
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

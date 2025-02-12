@@ -1,13 +1,98 @@
-from .base import BaseAnthropicTool, ToolResult, ToolError
-from playwright.async_api import async_playwright
+from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass, fields, replace
+from typing import Any
 import os
 import base64
-import dotenv
 from typing import Literal, Optional
+from playwright.async_api import async_playwright
 
-dotenv.load_dotenv()
+from anthropic.types.beta import BetaToolUnionParam
 
-CDP_URL = os.getenv("CDP_URL")
+
+class BaseAnthropicTool(metaclass=ABCMeta):
+    """Abstract base class for Anthropic-defined tools."""
+
+    @abstractmethod
+    def __call__(self, **kwargs) -> Any:
+        """Executes the tool with the given arguments."""
+        ...
+
+    @abstractmethod
+    def to_params(
+        self,
+    ) -> BetaToolUnionParam:
+        raise NotImplementedError
+
+
+@dataclass(kw_only=True, frozen=True)
+class ToolResult:
+    """Represents the result of a tool execution."""
+
+    output: str | None = None
+    error: str | None = None
+    base64_image: str | None = None
+    system: str | None = None
+
+    def __bool__(self):
+        return any(getattr(self, field.name) for field in fields(self))
+
+    def __add__(self, other: "ToolResult"):
+        def combine_fields(
+            field: str | None, other_field: str | None, concatenate: bool = True
+        ):
+            if field and other_field:
+                if concatenate:
+                    return field + other_field
+                raise ValueError("Cannot combine tool results")
+            return field or other_field
+
+        return ToolResult(
+            output=combine_fields(self.output, other.output),
+            error=combine_fields(self.error, other.error),
+            base64_image=combine_fields(self.base64_image, other.base64_image, False),
+            system=combine_fields(self.system, other.system),
+        )
+
+    def replace(self, **kwargs):
+        """Returns a new ToolResult with the given fields replaced."""
+        return replace(self, **kwargs)
+
+
+class CLIResult(ToolResult):
+    """A ToolResult that can be rendered as a CLI output."""
+
+
+class ToolFailure(ToolResult):
+    """A ToolResult that represents a failure."""
+
+
+class ToolError(Exception):
+    """Raised when a tool encounters an error."""
+
+    def __init__(self, message):
+        self.message = message
+
+
+class ToolCollection:
+    """A collection of anthropic-defined tools."""
+
+    def __init__(self, *tools: BaseAnthropicTool):
+        self.tools = tools
+        self.tool_map = {tool.to_params()["name"]: tool for tool in tools}
+
+    def to_params(
+        self,
+    ) -> list[BetaToolUnionParam]:
+        return [tool.to_params() for tool in self.tools]
+
+    async def run(self, *, name: str, tool_input: dict[str, Any]) -> ToolResult:
+        tool = self.tool_map.get(name)
+        if not tool:
+            return ToolFailure(error=f"Tool {name} is invalid")
+        try:
+            return await tool(**tool_input)
+        except ToolError as e:
+            return ToolFailure(error=e.message)
 
 
 class BrowserTool(BaseAnthropicTool):
@@ -21,12 +106,13 @@ class BrowserTool(BaseAnthropicTool):
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, cdp_url: str):
         """Initialize browser state."""
         self.playwright = None
         self.browser = None
         self.context = None
         self.page = None
+        self.cdp_url = cdp_url
 
     async def start(self):
         """Ensures connection to an existing browser or starts a new one."""
@@ -37,7 +123,7 @@ class BrowserTool(BaseAnthropicTool):
             self.playwright = await async_playwright().start()
 
         try:
-            self.browser = await self.playwright.chromium.connect_over_cdp(CDP_URL)
+            self.browser = await self.playwright.chromium.connect_over_cdp(self.cdp_url)
             self.context = (
                 self.browser.contexts[0]
                 if self.browser.contexts
