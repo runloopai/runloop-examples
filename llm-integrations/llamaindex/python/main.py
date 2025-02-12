@@ -7,6 +7,7 @@ import os
 # Initialize client
 runloop = Runloop(bearer_token=os.environ.get("RUNLOOP_API_KEY"))
 
+
 def generate_maze_creator():
     system_prompt = "You are a helpful coding assistant that can generate and execute python code. You only respond with the code to be executed and nothing else. Strip backticks in code blocks."
     prompt = """Write a Python script that generates a maze. The script should:
@@ -21,10 +22,9 @@ def generate_maze_creator():
     try:
         # Create LangChain components
         llm = ChatOpenAI(model="gpt-4o")
-        prompt_template = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", prompt)
-        ])
+        prompt_template = ChatPromptTemplate.from_messages(
+            [("system", system_prompt), ("human", prompt)]
+        )
         output_parser = StrOutputParser()
 
         # Create and run the chain
@@ -36,13 +36,12 @@ def generate_maze_creator():
         devbox = runloop.devboxes.create_and_await_running()
         print("Devbox ID:", devbox.id)
 
-        runloop.devboxes.write_file_contents(devbox.id,
-         file_path= "gen_maze.py",
-         contents= maze_generation_script
-         )
+        runloop.devboxes.write_file_contents(
+            devbox.id, file_path="gen_maze.py", contents=maze_generation_script
+        )
 
-        result = runloop.devboxes.execute_sync(devbox.id,
-            command= "python gen_maze.py --size 10"
+        result = runloop.devboxes.execute_sync(
+            devbox.id, command="python gen_maze.py --size 10"
         )
 
         if not result.exit_status:
@@ -52,6 +51,7 @@ def generate_maze_creator():
 
     except Exception as e:
         print("Error:", e)
+
 
 if __name__ == "__main__":
     generate_maze_creator()

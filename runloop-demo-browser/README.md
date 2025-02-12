@@ -67,7 +67,7 @@ Ensure you have the following:
     python main.py
     ```
 2. Access the UI:
-    Open your browser and navigate to http://localhost:8501 to interact with the remote-controlled browser session.
+    Open your browser and navigate to http://localhost:8080 to interact with the remote-controlled browser session.
 
 ## **Development Notes**
 

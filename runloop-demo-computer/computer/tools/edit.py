@@ -9,9 +9,13 @@ from .run import maybe_truncate, run
 from runloop_api_client import Runloop
 import os
 import dotenv
+
 dotenv.load_dotenv()
 
-runloop = Runloop(bearer_token=os.getenv("RUNLOOP_PRO"), base_url="https://api.runloop.pro")
+runloop = Runloop(
+    bearer_token=os.getenv("RUNLOOP_API_KEY"),
+    base_url=os.getenv("RUNLOOP_API_BASE_URL"),
+)
 DEVBOX = os.getenv("DEVBOX")
 
 Command = Literal[
@@ -84,7 +88,7 @@ class EditTool(BaseAnthropicTool):
         elif command == "undo_edit":
             return self.undo_edit(_path)
         raise ToolError(
-            f'Unrecognized command {command}. The allowed commands for the {self.name} tool are: {", ".join(get_args(Command))}'
+            f"Unrecognized command {command}. The allowed commands for the {self.name} tool are: {', '.join(get_args(Command))}"
         )
 
     def validate_path(self, command: str, path: Path):
@@ -98,7 +102,9 @@ class EditTool(BaseAnthropicTool):
                 f"The path {path} is not an absolute path, it should start with `/`. Maybe you meant {suggested_path}?"
             )
         # Check if path exists
-        cmd_result = runloop.devboxes.execute_sync(DEVBOX, command=f"[ -f {path} ] && echo 1 || echo 0")
+        cmd_result = runloop.devboxes.execute_sync(
+            DEVBOX, command=f"[ -f {path} ] && echo 1 || echo 0"
+        )
         print(cmd_result)
         exists = "1" in cmd_result.stdout
         print(exists)
@@ -113,7 +119,9 @@ class EditTool(BaseAnthropicTool):
                 f"File already exists at: {path}. Cannot overwrite files using command `create`."
             )
         # Check if the path points to a directory
-        cmd_result = runloop.devboxes.execute_sync(DEVBOX, command=f"[ -d {path} ] && echo 1 || echo 0")
+        cmd_result = runloop.devboxes.execute_sync(
+            DEVBOX, command=f"[ -d {path} ] && echo 1 || echo 0"
+        )
         is_dir = "1" in cmd_result.stdout
         if is_dir:
             if command != "view":
@@ -123,7 +131,9 @@ class EditTool(BaseAnthropicTool):
 
     async def view(self, path: Path, view_range: list[int] | None = None):
         """Implement the view command"""
-        cmd_result = runloop.devboxes.execute_sync(DEVBOX, command=f"[ -d {path} ] && echo 1 || echo 0")
+        cmd_result = runloop.devboxes.execute_sync(
+            DEVBOX, command=f"[ -d {path} ] && echo 1 || echo 0"
+        )
         is_dir = "1" in cmd_result.stdout
         if is_dir:
             if view_range:
@@ -220,7 +230,7 @@ class EditTool(BaseAnthropicTool):
 
     def insert(self, path: Path, insert_line: int, new_str: str):
         """Implement the insert command, which inserts new_str at the specified line in the file content."""
-        file_text = self.read_file(path).expandtabs()        
+        file_text = self.read_file(path).expandtabs()
         new_str = new_str.expandtabs()
         file_text_lines = file_text.split("\n")
         n_lines_file = len(file_text_lines)
@@ -279,7 +289,9 @@ class EditTool(BaseAnthropicTool):
     def write_file(self, path: Path, file: str):
         """Write the content of a file to a given path; raise a ToolError if an error occurs."""
         try:
-            runloop.devboxes.write_file_contents(DEVBOX, contents=file, file_path=str(path))
+            runloop.devboxes.write_file_contents(
+                DEVBOX, contents=file, file_path=str(path)
+            )
             # path.write_text(file)
         except Exception as e:
             raise ToolError(f"Ran into {e} while trying to write to {path}") from None

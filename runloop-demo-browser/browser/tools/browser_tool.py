@@ -1,8 +1,10 @@
 from .base import BaseAnthropicTool, ToolResult, ToolError
 from playwright.async_api import async_playwright
-import os, base64
+import os
+import base64
 import dotenv
 from typing import Literal, Optional
+
 dotenv.load_dotenv()
 
 CDP_URL = os.getenv("CDP_URL")
@@ -11,7 +13,7 @@ CDP_URL = os.getenv("CDP_URL")
 class BrowserTool(BaseAnthropicTool):
     """Tool for controlling a Playwright browser instance with persistent state."""
 
-    _instance = None  
+    _instance = None
 
     def __new__(cls, *args, **kwargs):
         """Ensure a single instance of the class is used."""
@@ -29,15 +31,23 @@ class BrowserTool(BaseAnthropicTool):
     async def start(self):
         """Ensures connection to an existing browser or starts a new one."""
         if self.browser:
-            return  
+            return
 
         if not self.playwright:
             self.playwright = await async_playwright().start()
 
         try:
             self.browser = await self.playwright.chromium.connect_over_cdp(CDP_URL)
-            self.context = self.browser.contexts[0] if self.browser.contexts else await self.browser.new_context()
-            self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+            self.context = (
+                self.browser.contexts[0]
+                if self.browser.contexts
+                else await self.browser.new_context()
+            )
+            self.page = (
+                self.context.pages[0]
+                if self.context.pages
+                else await self.context.new_page()
+            )
         except Exception as e:
             raise ToolError(f"Failed to connect to Chrome: {e}")
 
@@ -53,9 +63,15 @@ class BrowserTool(BaseAnthropicTool):
 
         try:
             await self.page.goto(url)
-            await self.page.wait_for_load_state("networkidle")  # Ensure page is fully loaded
-            self.page = self.browser.contexts[0].pages[0]  # Ensure we have a valid page reference
-            html_content = await self.page.evaluate("document.documentElement.outerHTML")
+            await self.page.wait_for_load_state(
+                "networkidle"
+            )  # Ensure page is fully loaded
+            self.page = self.browser.contexts[0].pages[
+                0
+            ]  # Ensure we have a valid page reference
+            html_content = await self.page.evaluate(
+                "document.documentElement.outerHTML"
+            )
             return ToolResult(output=f"Navigated to {url}", system=html_content[:10000])
         except Exception as e:
             return ToolResult(error=f"Failed to navigate: {str(e)}")
@@ -92,14 +108,20 @@ class BrowserTool(BaseAnthropicTool):
 
         try:
             await self.page.wait_for_load_state("networkidle", timeout=10000)
-            html_content = await self.page.evaluate("document.documentElement.outerHTML")
-            return ToolResult(output="Full page structure retrieved", system=html_content[:10000])
+            html_content = await self.page.evaluate(
+                "document.documentElement.outerHTML"
+            )
+            return ToolResult(
+                output="Full page structure retrieved", system=html_content[:10000]
+            )
         except Exception as e:
             return ToolResult(error=f"Failed to retrieve page structure: {str(e)}")
 
-    async def screenshot(self, save_path: str = "screenshots/screenshot.png") -> ToolResult:
+    async def screenshot(
+        self, save_path: str = "screenshots/screenshot.png"
+    ) -> ToolResult:
         """Takes a screenshot."""
-        await self.ensure_page()  
+        await self.ensure_page()
 
         try:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -107,7 +129,9 @@ class BrowserTool(BaseAnthropicTool):
             base64_image = None
             with open(save_path, "rb") as image_file:
                 base64_image = base64.b64encode(image_file.read()).decode()
-            return ToolResult(output=f"Screenshot saved at: {save_path}", base64_image=base64_image)
+            return ToolResult(
+                output=f"Screenshot saved at: {save_path}", base64_image=base64_image
+            )
         except Exception as e:
             return ToolResult(error=f"Failed to take screenshot: {str(e)}")
 
@@ -130,8 +154,6 @@ class BrowserTool(BaseAnthropicTool):
         except Exception as e:
             return ToolResult(error=f"Failed to submit search: {str(e)}")
 
-
-
     async def close(self):
         """Closes the browser session."""
         if self.browser:
@@ -146,7 +168,17 @@ class BrowserTool(BaseAnthropicTool):
     async def __call__(
         self,
         *,
-        command: Literal["start", "goto", "click", "get_latest_screenshot", "type_text", "screenshot", "get_page_structure", "close", "submit_using_enter_key"],
+        command: Literal[
+            "start",
+            "goto",
+            "click",
+            "get_latest_screenshot",
+            "type_text",
+            "screenshot",
+            "get_page_structure",
+            "close",
+            "submit_using_enter_key",
+        ],
         selector: Optional[str] = None,
         text: Optional[str] = None,
         url: Optional[str] = None,
@@ -183,7 +215,19 @@ class BrowserTool(BaseAnthropicTool):
             "input_schema": {
                 "type": "object",
                 "properties": {
-                    "command": {"type": "string", "enum": ["start", "goto", "submit_using_enter_key", "click", "type_text", "screenshot", "get_page_structure", "close"]},
+                    "command": {
+                        "type": "string",
+                        "enum": [
+                            "start",
+                            "goto",
+                            "submit_using_enter_key",
+                            "click",
+                            "type_text",
+                            "screenshot",
+                            "get_page_structure",
+                            "close",
+                        ],
+                    },
                     "selector": {"type": "string"},
                     "text": {"type": "string"},
                     "url": {"type": "string"},

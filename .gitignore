@@ -1,3 +1,5 @@
+.DS_Store
+
 # Node.js dependencies
 node_modules/
 
@@ -31,4 +33,5 @@ build/
 *.log
 *.tmp
 
-
+runloop-demo-browser/screenshots
+runloop-demo-computer/screenshots
