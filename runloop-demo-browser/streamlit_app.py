@@ -14,7 +14,7 @@ from functools import partial
 from typing import cast
 import httpx
 import streamlit as st
-from streamlit.components.v1 import  html
+from streamlit.components.v1 import html
 from anthropic import RateLimitError
 from anthropic.types.beta import (
     BetaContentBlockParam,
@@ -103,7 +103,7 @@ def setup_page(vnc_url):
 
         # **Initialize new_message before the condition**
         new_message = st.chat_input(
-            "Type a message to send to Claude to control the computer..."
+            "Type a message to send to Claude to control the browser..."
         )
 
         with chat:
@@ -143,12 +143,11 @@ def setup_page(vnc_url):
 
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
-        st.markdown('<div class="right-column">', unsafe_allow_html=True)
         st.components.v1.iframe(
-            f"{vnc_url}?view_only=1", width=950, height=800, scrolling=False
+            f"{vnc_url}?view_only=1", width=900, height=610, scrolling=False
         )
-        st.markdown("</div>", unsafe_allow_html=True)
     return (chat, http_logs)
+
 
 # function provides context to the model about interruptions by the user or tool errors
 def maybe_add_interruption_blocks():
@@ -210,7 +209,6 @@ def _tool_output_callback(
     _render_message(Sender.TOOL, tool_output)
 
 
-
 def _render_error(error: Exception):
     if isinstance(error, RateLimitError):
         body = "You have been rate limited."
@@ -226,21 +224,6 @@ def _render_error(error: Exception):
         {"role": Sender.BOT, "content": f"⚠️ Error: {body}"}
     )
 
-def auto_scroll():
-    html("""
-        <script>
-        function scrollToBottom() {
-            const chatContainer = window.parent.document.querySelector('[role="tabpanel"]:not([hidden])');
-            if (chatContainer) {
-                const observer = new MutationObserver(() => {
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                });
-                observer.observe(chatContainer, { childList: true, subtree: true });
-            }
-        }
-        scrollToBottom();
-        </script>
-    """, height=0)
 
 def _render_message(
     sender: Sender,
@@ -280,6 +263,25 @@ def _render_message(
             st.markdown(message)
 
 
+def auto_scroll():
+    html(
+        """
+        <script>
+        function scrollToBottom() {
+            const chatContainer = window.parent.document.querySelector('[role="tabpanel"]:not([hidden])');
+            if (chatContainer) {
+                const observer = new MutationObserver(() => {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                });
+                observer.observe(chatContainer, { childList: true, subtree: true });
+            }
+        }
+        scrollToBottom();
+        </script>
+    """,
+        height=0,
+    )
+
 
 async def main(api_key: str, devbox_id: str, cdp_url: str, vnc_url: str):
     """Render loop for streamlit"""
@@ -305,7 +307,6 @@ async def main(api_key: str, devbox_id: str, cdp_url: str, vnc_url: str):
                 cdp_url=cdp_url,
                 only_n_most_recent_images=st.session_state.only_n_most_recent_images,
             )
-
 
 
 if __name__ == "__main__":

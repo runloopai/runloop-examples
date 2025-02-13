@@ -1,4 +1,10 @@
-.stApp {
+.stMain{
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+.stAppViewContainer {
     margin: 0; /* Remove margin auto */
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     overflow: hidden; /* Prevent unnecessary scrollbars */
@@ -9,7 +15,6 @@
         #1b4e8b 75%,  
         #0a1628 98%   
     );
-    background-size: 400% 400%;
     background-attachment: fixed;
     animation: gradientShift 15s ease infinite;
     position: relative;
@@ -63,6 +68,11 @@
     pointer-events: none;
 }
 
+.stMainBlockContainer{
+    width: 100vw;
+    height: 100vh;
+}
+
 
 
 button[kind=header]:hover {
@@ -80,24 +90,6 @@ button[kind=header]:hover {
     overflow: hidden !important;
 }
 
-
-
-/* Ensure columns remain fixed and do not resize */
-.st-emotion-cache-ocqkz7.e6rk8up0 {
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    height: 100vh !important;
-    min-height: 0 !important; /* Prevent scroll issues */
-    overflow: hidden !important;
-}
-
-
-/* Remove padding from horizontal blocks */
-.stHorizontalBlock.st-emotion-cache-ocqkz7.e6rk8up0 {
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
 /* Hide the Streamlit deploy button */
 .stAppDeployButton {
     visibility: hidden;
@@ -111,16 +103,6 @@ button[kind=header]:hover {
     border-radius: 10px;
     box-sizing: border-box; /* Ensures padding does not add to total width */
 }
-
-
-
-/* Prevent the chat area from expanding */
-.stChatMessage {
-    max-height: 50vh !important; /* Prevent message overflow */
-    overflow-y: auto !important; /* Allow scrolling inside */
-    flex-grow: 0 !important; /* Prevent chat box from pushing other elements */
-}
-
 
 /* User messages */
 .stChatMessage.user {
@@ -148,23 +130,6 @@ iframe {
 }
 
 
-/* Fix the side-by-side layout and prevent resizing */
-.st-emotion-cache-1y4p8pa {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    height: 100vh !important;
-    overflow: hidden !important;
-}
-
-/* Ensure the second column (iframe/browser) remains fixed */
-.st-emotion-cache-2d4l25 {
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    height: 100vh !important;
-    overflow: hidden !important;
-}
-
 button[kind=header]:hover {
     background-color: rgb(255, 51, 51);
 }
@@ -174,9 +139,39 @@ button[kind=header]:hover {
     visibility: hidden;
 }
 
-.st-emotion-cache-2d4l25 {
-    flex-grow: 1 !important;
-    height: 100% !important;
-    min-height: 0 !important; /* Prevent expansion */
-    overflow: hidden !important;
+
+
+/* Ensure chat panel has a fixed height & scrolling */
+[role="tabpanel"]:not([hidden]) {
+    height: 40vh; /* Adjust height as needed */
+    overflow-y: auto !important;
+    display: flex;
+    flex-direction: column;
+    scroll-behavior: smooth; /* Smooth scrolling */
+    scroll-snap-type: y mandatory; /* Ensures chat always snaps to bottom */
+}
+
+/* Chat container should grow inside the tab panel */
+#chat-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 10px;
+    max-height: 100%;
+    scroll-snap-align: end; /* Always keep the last message in view */
+}
+
+/* Custom scrollbar */
+#chat-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat-container::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+}
+
+.stIFrame{
+    margin-top: 60px;
 }

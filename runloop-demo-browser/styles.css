@@ -1,4 +1,10 @@
-.stApp {
+.stMain{
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+.stAppViewContainer {
     margin: 0; /* Remove margin auto */
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     overflow: hidden; /* Prevent unnecessary scrollbars */
@@ -9,7 +15,6 @@
         #1b4e8b 75%,  
         #0a1628 98%   
     );
-    background-size: 400% 400%;
     background-attachment: fixed;
     animation: gradientShift 15s ease infinite;
     position: relative;
@@ -61,6 +66,11 @@
     transform: skewX(-15deg); /* Reduce skew angle */
     opacity: 0.3;
     pointer-events: none;
+}
+
+.stMainBlockContainer{
+    width: 100vw;
+    height: 100vh;
 }
 
 
@@ -133,7 +143,7 @@ button[kind=header]:hover {
 
 /* Ensure chat panel has a fixed height & scrolling */
 [role="tabpanel"]:not([hidden]) {
-    height: 50vh; /* Adjust height as needed */
+    height: 40vh; /* Adjust height as needed */
     overflow-y: auto !important;
     display: flex;
     flex-direction: column;
@@ -160,4 +170,8 @@ button[kind=header]:hover {
 #chat-container::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.4);
     border-radius: 4px;
+}
+
+.stIFrame{
+    margin-top: 60px;
 }
