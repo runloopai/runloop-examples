@@ -14,6 +14,7 @@ from functools import partial
 from typing import cast
 import httpx
 import streamlit as st
+from streamlit.components.v1 import  html
 from anthropic import RateLimitError
 from anthropic.types.beta import (
     BetaContentBlockParam,
@@ -95,21 +96,22 @@ def setup_page(vnc_url):
         st.title("Claude Computer Use Demo")
         st.warning(WARNING_TEXT)
 
-        # **Initialize new_message before the condition**
-        new_message = st.chat_input(
-            "Type a message to send to Claude to control the computer..."
-        )
-
         if not st.session_state.api_key:
             st.warning("Please set an API key in the sidebar")
 
         chat, http_logs = st.tabs(["Chat", "HTTP Exchange Logs"])
+
+        # **Initialize new_message before the condition**
+        new_message = st.chat_input(
+            "Type a message to send to Claude to control the computer..."
+        )
 
         with chat:
             # render past chats
             for message in st.session_state.messages:
                 if isinstance(message["content"], str):
                     _render_message(message["role"], message["content"])
+                    auto_scroll()
                 elif isinstance(message["content"], list):
                     for block in message["content"]:
                         # the tool result we send back to the Anthropic API isn't sufficient to render all details,
@@ -119,28 +121,26 @@ def setup_page(vnc_url):
                                 Sender.TOOL,
                                 st.session_state.tools[block["tool_use_id"]],
                             )
+                            auto_scroll()
                         else:
                             _render_message(
                                 message["role"],
                                 cast(BetaContentBlockParam | ToolResult, block),
                             )
+                            auto_scroll()
+            if new_message:
+                st.session_state.messages.append(
+                    {
+                        "role": Sender.USER,
+                        "content": [
+                            *maybe_add_interruption_blocks(),
+                            BetaTextBlockParam(type="text", text=new_message),
+                        ],
+                    }
+                )
+                _render_message(Sender.USER, new_message)
+            auto_scroll()
 
-        # Render past HTTP exchanges
-        for identity, (request, response) in st.session_state.responses.items():
-            _render_api_response(request, response, identity, http_logs)
-
-        # Handle new message
-        if new_message:
-            st.session_state.messages.append(
-                {
-                    "role": Sender.USER,
-                    "content": [
-                        *maybe_add_interruption_blocks(),
-                        BetaTextBlockParam(type="text", text=new_message),
-                    ],
-                }
-            )
-            _render_message(Sender.USER, new_message)
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
         st.markdown('<div class="right-column">', unsafe_allow_html=True)
@@ -148,33 +148,7 @@ def setup_page(vnc_url):
             f"{vnc_url}?view_only=1", width=950, height=800, scrolling=False
         )
         st.markdown("</div>", unsafe_allow_html=True)
-    return http_logs
-
-
-async def main(api_key: str, devbox_id: str, cdp_url: str, vnc_url: str):
-    """Render loop for streamlit"""
-    setup_state(api_key)
-    http_logs = setup_page(vnc_url)
-
-    with track_sampling_loop():
-        st.session_state.messages = await sampling_loop(
-            system_prompt_suffix=st.session_state.custom_system_prompt,
-            model=DEFAULT_MODEL,
-            messages=st.session_state.messages,
-            output_callback=partial(_render_message, Sender.BOT),
-            tool_output_callback=partial(
-                _tool_output_callback, tool_state=st.session_state.tools
-            ),
-            api_response_callback=partial(
-                _api_response_callback,
-                tab=http_logs,
-                response_state=st.session_state.responses,
-            ),
-            api_key=st.session_state.api_key,
-            cdp_url=cdp_url,
-            only_n_most_recent_images=st.session_state.only_n_most_recent_images,
-        )
-
+    return (chat, http_logs)
 
 # function provides context to the model about interruptions by the user or tool errors
 def maybe_add_interruption_blocks():
@@ -226,7 +200,6 @@ def _api_response_callback(
     logger.warning(f"API response error: {response_id}", exc_info=error)
     if error:
         _render_error(error)
-    _render_api_response(request, response, response_id, tab)
 
 
 def _tool_output_callback(
@@ -236,29 +209,6 @@ def _tool_output_callback(
     tool_state[tool_id] = tool_output
     _render_message(Sender.TOOL, tool_output)
 
-
-def _render_api_response(
-    request: httpx.Request,
-    response: httpx.Response | object | None,
-    response_id: str,
-    tab: DeltaGenerator,
-):
-    """Render an API response to a streamlit tab"""
-    with tab:
-        with st.expander(f"Request/Response ({response_id})"):
-            newline = "\n\n"
-            st.markdown(
-                f"`{request.method} {request.url}`{newline}{newline.join(f'`{k}: {v}`' for k, v in request.headers.items())}"
-            )
-            st.json(request.read().decode())
-            st.markdown("---")
-            if isinstance(response, httpx.Response):
-                st.markdown(
-                    f"`{response.status_code}`{newline}{newline.join(f'`{k}: {v}`' for k, v in response.headers.items())}"
-                )
-                st.json(response.text)
-            else:
-                st.write(response)
 
 
 def _render_error(error: Exception):
@@ -276,6 +226,21 @@ def _render_error(error: Exception):
         {"role": Sender.BOT, "content": f"⚠️ Error: {body}"}
     )
 
+def auto_scroll():
+    html("""
+        <script>
+        function scrollToBottom() {
+            const chatContainer = window.parent.document.querySelector('[role="tabpanel"]:not([hidden])');
+            if (chatContainer) {
+                const observer = new MutationObserver(() => {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                });
+                observer.observe(chatContainer, { childList: true, subtree: true });
+            }
+        }
+        scrollToBottom();
+        </script>
+    """, height=0)
 
 def _render_message(
     sender: Sender,
@@ -313,6 +278,34 @@ def _render_message(
                 raise Exception(f"Unexpected response type {message['type']}")
         else:
             st.markdown(message)
+
+
+
+async def main(api_key: str, devbox_id: str, cdp_url: str, vnc_url: str):
+    """Render loop for streamlit"""
+    setup_state(api_key)
+    chat, http_logs = setup_page(vnc_url)
+
+    with chat:
+        with track_sampling_loop():
+            st.session_state.messages = await sampling_loop(
+                system_prompt_suffix=st.session_state.custom_system_prompt,
+                model=DEFAULT_MODEL,
+                messages=st.session_state.messages,
+                output_callback=partial(_render_message, Sender.BOT),
+                tool_output_callback=partial(
+                    _tool_output_callback, tool_state=st.session_state.tools
+                ),
+                api_response_callback=partial(
+                    _api_response_callback,
+                    tab=http_logs,
+                    response_state=st.session_state.responses,
+                ),
+                api_key=st.session_state.api_key,
+                cdp_url=cdp_url,
+                only_n_most_recent_images=st.session_state.only_n_most_recent_images,
+            )
+
 
 
 if __name__ == "__main__":
