@@ -96,8 +96,8 @@ class ComputerTool(BaseAnthropicTool):
     def __init__(self, devbox_id):
         super().__init__()
         # WE NEED TO GET THE WIDTH AND HEIGHT OF THE SCREEN TO ALIGN WITH THE VALUE IN THE DEVBOX
-        self.width = int(os.getenv("WIDTH") or 0)
-        self.height = int(os.getenv("HEIGHT") or 0)
+        self.width = int(os.getenv("WIDTH") or 1920)
+        self.height = int(os.getenv("HEIGHT") or 1080)
         assert self.width and self.height, "WIDTH, HEIGHT must be set"
         if (display_num := os.getenv("DISPLAY_NUM")) is not None:
             self.display_num = int(display_num)

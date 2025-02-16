@@ -63,7 +63,7 @@ if __name__ == "__main__":
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         logger.error("ANTHROPIC_API_KEY is not set; please set it in your environment")
-        os.exit(1)
+        os._exit(1)
 
     logger.info("Creating new devbox on Runloop ...")
     devbox_id, cdp_url, vnc_url = initialize_devbox()

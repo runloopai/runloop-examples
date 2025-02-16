@@ -16,15 +16,14 @@ client = Runloop(
 def initialize_devbox():
     """Starts a new Runloop Devbox with the browser extension installed.
 
-    Returns: (devbox_id, cdp_url, vnc_url)
+    Returns: (devbox_id, vnc_url)
     """
     computer = client.devboxes.computers.create()
     client.devboxes.await_running(computer.devbox.id)
-    vnc_url = computer.live_screen_url
-    return computer.devbox.id, computer.live_screen_url, vnc_url
+    return computer.devbox.id, computer.live_screen_url
 
 
-def start_streamlit(api_key, devbox_id, cdp_url, vnc_url):
+def start_streamlit(api_key, devbox_id, vnc_url):
     """Starts the Streamlit app in a background process.
 
     Streamlit needs to be run in headless mode, and there isn't good support for doing so
@@ -43,7 +42,6 @@ def start_streamlit(api_key, devbox_id, cdp_url, vnc_url):
     env = {
         "ANTHROPIC_API_KEY": api_key,
         "DEVBOX_ID": devbox_id,
-        "CDP_URL": cdp_url,
         "VNC_URL": vnc_url,
     }
     env.update(os.environ)
@@ -66,11 +64,11 @@ if __name__ == "__main__":
         os._exit(1)
 
     logger.info("Creating new devbox on Runloop ...")
-    devbox_id, cdp_url, vnc_url = initialize_devbox()
+    devbox_id, vnc_url = initialize_devbox()
 
     try:
         logger.info("Starting Streamlit app ...")
-        streamlit_process = start_streamlit(api_key, devbox_id, cdp_url, vnc_url)
+        streamlit_process = start_streamlit(api_key, devbox_id, vnc_url)
 
         print("✨ Computer Use Demo is ready! ✨")
         print("Open http://localhost:8501 in your browser to begin")
