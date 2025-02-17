@@ -26,7 +26,7 @@ from anthropic.types.beta import (
     BetaToolUseBlockParam,
 )
 
-from tools import BashTool, ComputerTool, EditTool, ToolCollection, ToolResult
+from tools import ComputerTool, EditTool, ToolCollection, ToolResult
 from dotenv import load_dotenv
 import logging
 
@@ -92,7 +92,6 @@ async def sampling_loop(
     """
     tool_collection = ToolCollection(
         ComputerTool(devbox_id),
-        BashTool(devbox_id),
         EditTool(devbox_id),
     )
     system = BetaTextBlockParam(

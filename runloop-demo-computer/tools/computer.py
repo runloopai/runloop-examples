@@ -5,7 +5,7 @@ import dotenv
 
 from anthropic.types.beta import BetaToolComputerUse20241022Param
 
-from .base import BaseAnthropicTool, ToolError, ToolResult
+from .base import BaseTool, ToolError, ToolResult
 from runloop_api_client import Runloop
 import logging
 
@@ -64,7 +64,7 @@ def chunks(s: str, chunk_size: int) -> list[str]:
     return [s[i : i + chunk_size] for i in range(0, len(s), chunk_size)]
 
 
-class ComputerTool(BaseAnthropicTool):
+class ComputerTool(BaseTool):
     """
     A tool that allows the agent to interact with the screen, keyboard, and mouse of the current computer.
     The tool parameters are defined by Anthropic and are not editable.

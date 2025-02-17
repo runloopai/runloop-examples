@@ -1,12 +1,9 @@
-from .base import CLIResult, ToolResult
-from .bash import BashTool
-from .collection import ToolCollection
+from .base import ToolResult, ToolCollection, ToolError
 from .computer import ComputerTool
 from .edit import EditTool
 
 __ALL__ = [
-    BashTool,
-    CLIResult,
+    ToolError,
     ComputerTool,
     EditTool,
     ToolCollection,

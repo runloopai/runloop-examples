@@ -3,8 +3,7 @@ from pathlib import Path
 from typing import Literal, get_args, List
 
 from anthropic.types.beta import BetaToolTextEditor20241022Param
-from .base import BaseAnthropicTool, CLIResult, ToolError, ToolResult
-from .run import maybe_truncate, run
+from .base import BaseTool, ToolError, ToolResult
 from runloop_api_client import Runloop
 import os
 import dotenv
@@ -19,8 +18,36 @@ runloop = Runloop(
 Command = Literal["view", "create", "str_replace", "insert", "undo_edit"]
 SNIPPET_LINES = 4
 
+TRUNCATED_MESSAGE = (
+    "<response clipped><NOTE>To save on context, only part of this file has been shown. "
+    "Retry this tool after searching inside the file with `grep -n` to find relevant line numbers.</NOTE>"
+)
+MAX_RESPONSE_LEN = 16000
 
-class EditTool(BaseAnthropicTool):
+
+def maybe_truncate(content: str, truncate_after: int = MAX_RESPONSE_LEN) -> str:
+    """Truncate content and append a notice if it exceeds the specified length."""
+    return (
+        content
+        if len(content) <= truncate_after
+        else content[:truncate_after] + TRUNCATED_MESSAGE
+    )
+
+
+async def run(
+    cmd: str,
+    timeout: float = 120.0,  # seconds
+    truncate_after: int = MAX_RESPONSE_LEN,
+):
+    """Run a shell command asynchronously with a timeout."""
+    response = runloop.devboxes.execute_sync(
+        os.getenv("DEVBOX", ""), command=cmd, timeout=timeout
+    )
+    stdout, stderr = (response.stdout or "").encode(), (response.stderr or "").encode()
+    return response.exit_status or 0, stdout[:truncate_after], stderr[:truncate_after]
+
+
+class EditTool(BaseTool):
     """
     A filesystem editor tool that allows the agent to view, create, and edit files.
     The tool parameters are defined by Anthropic and are not editable.
@@ -105,10 +132,10 @@ class EditTool(BaseAnthropicTool):
             _, stdout, stderr = await run(
                 rf"find {path} -maxdepth 2 -not -path '*/\.*'"
             )
-            return CLIResult(output=f"Files in {path}:\n{stdout}", error=stderr)
+            return ToolResult(output=f"Files in {path}:\n{stdout}", error=stderr)
 
         file_content = self.read_file(path)
-        return CLIResult(output=self._make_output(file_content, str(path)))
+        return ToolResult(output=self._make_output(file_content, str(path)))
 
     def create(self, path: Path, file_text: str):
         """Handles file creation."""
@@ -135,7 +162,7 @@ class EditTool(BaseAnthropicTool):
         self.write_file(path, new_file_content)
         self._file_history[path].append(file_content)
 
-        return CLIResult(output=f"Replaced `{old_str}` in {path}.")
+        return ToolResult(output=f"Replaced `{old_str}` in {path}.")
 
     def insert(self, path: Path, insert_line: int, new_str: str):
         """Handles inserting a string into a file at a specified line."""
@@ -149,7 +176,7 @@ class EditTool(BaseAnthropicTool):
         self.write_file(path, "\n".join(new_content))
         self._file_history[path].append(file_text)
 
-        return CLIResult(output=f"Inserted text at line {insert_line} in {path}.")
+        return ToolResult(output=f"Inserted text at line {insert_line} in {path}.")
 
     def undo_edit(self, path: Path):
         """Handles undoing the last edit."""
@@ -157,7 +184,7 @@ class EditTool(BaseAnthropicTool):
             raise ToolError(f"No edit history found for {path}.")
 
         self.write_file(path, self._file_history[path].pop())
-        return CLIResult(output=f"Undo successful for {path}.")
+        return ToolResult(output=f"Undo successful for {path}.")
 
     def read_file(self, path: Path):
         """Reads a file from the devbox."""
