@@ -93,7 +93,11 @@ const tools = [
 async function runAgent(devbox: DevboxView) {
   const messageHistory: ChatCompletionMessage[] = [
     { role: "assistant", content: SYSTEM_PROMPT, refusal: null },
-    { role: "user", content: USER_PROMPT, refusal: null } as unknown as ChatCompletionMessage,
+    {
+      role: "user",
+      content: USER_PROMPT,
+      refusal: null,
+    } as unknown as ChatCompletionMessage,
   ];
 
   let numIterations = 0;
@@ -123,7 +127,9 @@ async function runAgent(devbox: DevboxView) {
         switch (toolCall.function.name) {
           case "executeShellCommand":
             result = (
-              await runloop.devboxes.executeSync(devbox.id, { command: functionArgs.command })
+              await runloop.devboxes.executeSync(devbox.id, {
+                command: functionArgs.command,
+              })
             ).stdout;
             break;
           case "readFile":
