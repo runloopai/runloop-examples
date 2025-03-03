@@ -2,20 +2,20 @@
 Entrypoint for streamlit, see https://docs.streamlit.io/
 """
 
+from pathlib import PosixPath
 import asyncio
 import base64
+import logging
 import os
-import sys
 import traceback
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from enum import StrEnum
 from functools import partial
-from pathlib import PosixPath
 from typing import cast
-from dotenv import load_dotenv
 import httpx
 import streamlit as st
+from streamlit.components.v1 import html, iframe
 from anthropic import RateLimitError
 from anthropic.types.beta import (
     BetaContentBlockParam,
@@ -25,17 +25,17 @@ from anthropic.types.beta import (
 from streamlit.delta_generator import DeltaGenerator
 
 from loop import (
-    PROVIDER_TO_DEFAULT_MODEL_NAME,
-    APIProvider,
     sampling_loop,
 )
 from tools import ToolResult
 
-load_dotenv()
+logger = logging.getLogger(__name__)
+
 
 CONFIG_DIR = PosixPath("~/.anthropic").expanduser()
 DEVBOX = os.getenv("DEVBOX")
 API_KEY_FILE = CONFIG_DIR / "api_key"
+DEFAULT_MODEL = "claude-3-5-sonnet-20241022"
 
 WARNING_TEXT = "⚠️ Security Alert: Never provide access to sensitive accounts or data, as malicious web content can hijack Claude's behavior"
 INTERRUPT_TEXT = "(user stopped or interrupted and wrote the following)"
@@ -48,22 +48,11 @@ class Sender(StrEnum):
     TOOL = "tool"
 
 
-def setup_state():
+def setup_state(api_key: str):
+    if "api_key" not in st.session_state:
+        st.session_state.api_key = api_key
     if "messages" not in st.session_state:
         st.session_state.messages = []
-    if "api_key" not in st.session_state:
-        # Try to load API key from file first, then environment
-        st.session_state.api_key = os.getenv("ANTHROPIC_API_KEY", "")
-    if "provider" not in st.session_state:
-        st.session_state.provider = (
-            os.getenv("API_PROVIDER", "anthropic") or APIProvider.ANTHROPIC
-        )
-    if "provider_radio" not in st.session_state:
-        st.session_state.provider_radio = st.session_state.provider
-    if "model" not in st.session_state:
-        _reset_model()
-    if "auth_validated" not in st.session_state:
-        st.session_state.auth_validated = False
     if "responses" not in st.session_state:
         st.session_state.responses = {}
     if "tools" not in st.session_state:
@@ -71,17 +60,11 @@ def setup_state():
     if "only_n_most_recent_images" not in st.session_state:
         st.session_state.only_n_most_recent_images = 3
     if "custom_system_prompt" not in st.session_state:
-        st.session_state.custom_system_prompt = load_from_storage("system_prompt") or ""
+        st.session_state.custom_system_prompt = ""
     if "hide_images" not in st.session_state:
         st.session_state.hide_images = False
     if "in_sampling_loop" not in st.session_state:
         st.session_state.in_sampling_loop = False
-
-
-def _reset_model():
-    st.session_state.model = PROVIDER_TO_DEFAULT_MODEL_NAME[
-        cast(APIProvider, st.session_state.provider)
-    ]
 
 
 def setup_page(vnc_url):
@@ -90,37 +73,16 @@ def setup_page(vnc_url):
     st.set_page_config(layout="wide")
     col1, col2 = st.columns([0.35, 0.65])
 
-    with open("computer/styles.css", "r") as f:
+    with open("styles.css", "r") as f:
         css = f.read()
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
     with st.sidebar:
-
-        def _reset_api_provider():
-            if st.session_state.provider_radio != st.session_state.provider:
-                _reset_model()
-                st.session_state.provider = st.session_state.provider_radio
-                st.session_state.auth_validated = False
-
-        provider_options = [option.value for option in APIProvider]
-        st.radio(
-            "API Provider",
-            options=provider_options,
-            key="provider_radio",
-            format_func=lambda x: x.title(),
-            on_change=_reset_api_provider,
+        st.text_input(
+            "Anthropic API Key",
+            type="password",
+            key="api_key",
         )
-
-        st.text_input("Model", key="model")
-
-        if st.session_state.provider == APIProvider.ANTHROPIC:
-            st.text_input(
-                "Anthropic API Key",
-                type="password",
-                key="api_key",
-                on_change=lambda: save_to_storage("api_key", st.session_state.api_key),
-            )
-
         st.number_input(
             "Only send N most recent images",
             min_value=0,
@@ -131,133 +93,58 @@ def setup_page(vnc_url):
             "Custom System Prompt Suffix",
             key="custom_system_prompt",
             help="Additional instructions to append to the system prompt. See loop.py for the base system prompt.",
-            on_change=lambda: save_to_storage(
-                "system_prompt", st.session_state.custom_system_prompt
-            ),
         )
         st.checkbox("Hide screenshots", key="hide_images")
 
     with col1:
         st.markdown('<div class="left-column">', unsafe_allow_html=True)
-        st.title("Claude Computer Use Demo")
+        st.title("Runloop Computer Use Demo")
+        st.warning(WARNING_TEXT)
 
-        if not os.getenv("HIDE_WARNING", False):
-            st.warning(WARNING_TEXT)
+        chat, http_logs = st.tabs(["Chat", "HTTP Exchange Logs"])
 
         # **Initialize new_message before the condition**
         new_message = st.chat_input(
             "Type a message to send to Claude to control the computer..."
         )
 
-        if not st.session_state.auth_validated:
-            if auth_error := validate_auth(
-                st.session_state.provider, st.session_state.api_key
-            ):
-                st.warning(f"Please resolve the following auth issue:\n\n{auth_error}")
-            else:
-                st.session_state.auth_validated = True
-
-        chat, http_logs = st.tabs(["Chat", "HTTP Exchange Logs"])
-
         with chat:
             # render past chats
             for message in st.session_state.messages:
                 if isinstance(message["content"], str):
                     _render_message(message["role"], message["content"])
+                    auto_scroll()
                 elif isinstance(message["content"], list):
                     for block in message["content"]:
-                        # the tool result we send back to the Anthropic API isn't sufficient to render all details,
-                        # so we store the tool use responses
                         if isinstance(block, dict) and block["type"] == "tool_result":
                             _render_message(
                                 Sender.TOOL,
                                 st.session_state.tools[block["tool_use_id"]],
                             )
+                            auto_scroll()
                         else:
                             _render_message(
                                 message["role"],
                                 cast(BetaContentBlockParam | ToolResult, block),
                             )
+                            auto_scroll()
+            if new_message:
+                st.session_state.messages.append(
+                    {
+                        "role": Sender.USER,
+                        "content": [
+                            *maybe_add_interruption_blocks(),
+                            BetaTextBlockParam(type="text", text=new_message),
+                        ],
+                    }
+                )
+                _render_message(Sender.USER, new_message)
+            auto_scroll()
 
-        # Render past HTTP exchanges
-        for identity, (request, response) in st.session_state.responses.items():
-            _render_api_response(request, response, identity, http_logs)
-
-        # Handle new message
-        if new_message:
-            st.session_state.messages.append(
-                {
-                    "role": Sender.USER,
-                    "content": [
-                        *maybe_add_interruption_blocks(),
-                        BetaTextBlockParam(type="text", text=new_message),
-                    ],
-                }
-            )
-            _render_message(Sender.USER, new_message)
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
-        st.markdown('<div class="right-column">', unsafe_allow_html=True)
-        st.components.v1.iframe(
-            f"{vnc_url}?view_only=1", width=950, height=800, scrolling=False
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-    return http_logs
-
-
-async def main():
-    """Render loop for streamlit"""
-    url = sys.argv[1]
-    setup_state()
-    http_logs = setup_page(url)
-
-    with track_sampling_loop():
-        # run the agent sampling loop with the newest message
-        st.session_state.messages = await sampling_loop(
-            system_prompt_suffix=st.session_state.custom_system_prompt,
-            model=st.session_state.model,
-            provider=st.session_state.provider,
-            messages=st.session_state.messages,
-            output_callback=partial(_render_message, Sender.BOT),
-            tool_output_callback=partial(
-                _tool_output_callback, tool_state=st.session_state.tools
-            ),
-            api_response_callback=partial(
-                _api_response_callback,
-                tab=http_logs,
-                response_state=st.session_state.responses,
-            ),
-            api_key=st.session_state.api_key,
-            only_n_most_recent_images=st.session_state.only_n_most_recent_images,
-        )
-
-
-# function provides context to the model about interruptions by the user or tool errors
-def maybe_add_interruption_blocks():
-    if not st.session_state.in_sampling_loop:
-        return []
-    # If this function is called while we're in the sampling loop, we can assume that the previous sampling loop was interrupted
-    # and we should annotate the conversation with additional context for the model and heal any incomplete tool use calls
-    result = []
-    if st.session_state.messages:
-        last_message = st.session_state.messages[-1]
-        previous_tool_use_ids = [
-            block["id"]
-            for block in last_message["content"]
-            if block["type"] == "tool_use"
-        ]
-        for tool_use_id in previous_tool_use_ids:
-            st.session_state.tools[tool_use_id] = ToolResult(error=INTERRUPT_TOOL_ERROR)
-            result.append(
-                BetaToolResultBlockParam(
-                    tool_use_id=tool_use_id,
-                    type="tool_result",
-                    content=INTERRUPT_TOOL_ERROR,
-                    is_error=True,
-                )
-            )
-    result.append(BetaTextBlockParam(type="text", text=INTERRUPT_TEXT))
-    return result
+        iframe(f"{vnc_url}?view_only=1", width=900, height=610, scrolling=False)
+    return (chat, http_logs)
 
 
 @contextmanager
@@ -265,37 +152,6 @@ def track_sampling_loop():
     st.session_state.in_sampling_loop = True
     yield
     st.session_state.in_sampling_loop = False
-
-
-def validate_auth(provider: APIProvider, api_key: str | None):
-    if provider == APIProvider.ANTHROPIC:
-        if not api_key:
-            return "Enter your Anthropic API key in the sidebar to continue."
-
-
-def load_from_storage(filename: str) -> str | None:
-    """Load data from a file in the storage directory."""
-    try:
-        file_path = CONFIG_DIR / filename
-        if file_path.exists():
-            data = file_path.read_text().strip()
-            if data:
-                return data
-    except Exception as e:
-        st.write(f"Debug: Error loading {filename}: {e}")
-    return None
-
-
-def save_to_storage(filename: str, data: str) -> None:
-    """Save data to a file in the storage directory."""
-    try:
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        file_path = CONFIG_DIR / filename
-        file_path.write_text(data)
-        # Ensure only user can read/write the file
-        file_path.chmod(0o600)
-    except Exception as e:
-        st.write(f"Debug: Error saving {filename}: {e}")
 
 
 def _api_response_callback(
@@ -358,11 +214,29 @@ def _render_error(error: Exception):
         body += "\n\n**Traceback:**"
         lines = "\n".join(traceback.format_exception(error))
         body += f"\n\n```{lines}```"
-    save_to_storage(f"error_{datetime.now().timestamp()}.md", body)
     st.session_state.messages.append(
         {"role": Sender.BOT, "content": f"⚠️ Error: {body}"}
     )
-    # st.error(f"**{error.__class__.__name__}**\n\n{body}", icon=":material/error:")
+
+
+def auto_scroll():
+    html(
+        """
+        <script>
+        function scrollToBottom() {
+            const chatContainer = window.parent.document.querySelector('[role="tabpanel"]:not([hidden])');
+            if (chatContainer) {
+                const observer = new MutationObserver(() => {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                });
+                observer.observe(chatContainer, { childList: true, subtree: true });
+            }
+        }
+        scrollToBottom();
+        </script>
+    """,
+        height=0,
+    )
 
 
 def _render_message(
@@ -403,5 +277,60 @@ def _render_message(
             st.markdown(message)
 
 
+# function provides context to the model about interruptions by the user or tool errors
+def maybe_add_interruption_blocks():
+    if not st.session_state.in_sampling_loop:
+        return []
+    result = []
+    if st.session_state.messages:
+        last_message = st.session_state.messages[-1]
+        previous_tool_use_ids = [
+            block["id"]
+            for block in last_message["content"]
+            if block["type"] == "tool_use"
+        ]
+        for tool_use_id in previous_tool_use_ids:
+            st.session_state.tools[tool_use_id] = ToolResult(error=INTERRUPT_TOOL_ERROR)
+            result.append(
+                BetaToolResultBlockParam(
+                    tool_use_id=tool_use_id,
+                    type="tool_result",
+                    content=INTERRUPT_TOOL_ERROR,
+                    is_error=True,
+                )
+            )
+    result.append(BetaTextBlockParam(type="text", text=INTERRUPT_TEXT))
+    return result
+
+
+async def main(api_key: str, devbox_id: str, vnc_url: str):
+    """Render loop for streamlit"""
+    setup_state(api_key)
+    chat, http_logs = setup_page(vnc_url)
+
+    with chat:
+        with track_sampling_loop():
+            st.session_state.messages = await sampling_loop(
+                system_prompt_suffix=st.session_state.custom_system_prompt,
+                model=DEFAULT_MODEL,
+                messages=st.session_state.messages,
+                output_callback=partial(_render_message, Sender.BOT),
+                tool_output_callback=partial(
+                    _tool_output_callback, tool_state=st.session_state.tools
+                ),
+                api_response_callback=partial(
+                    _api_response_callback,
+                    tab=http_logs,
+                    response_state=st.session_state.responses,
+                ),
+                api_key=st.session_state.api_key,
+                only_n_most_recent_images=st.session_state.only_n_most_recent_images,
+                devbox_id=devbox_id,
+            )
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    devbox_id = os.getenv("DEVBOX_ID")
+    vnc_url = os.getenv("VNC_URL")
+    asyncio.run(main(api_key, devbox_id, vnc_url))
