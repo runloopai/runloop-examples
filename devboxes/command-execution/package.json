@@ -1,5 +1,5 @@
 {
-  "name": "start-stop",
+  "name": "command-execution",
   "version": "1.0.0",
   "description": "Runloop API example in TypeScript",
   "main": "index.ts",

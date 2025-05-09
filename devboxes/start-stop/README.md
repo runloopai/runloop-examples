@@ -11,12 +11,12 @@ export RUNLOOP_API_KEY="..."
 
 ### Python
 
-```
-uv run index.py
+```sh
+uv install && uv run index.py
 ```
 
 ### TypeScript
 
-```
-npx tsx index.ts
+```sh
+npm install && npx tsx index.ts
 ```
