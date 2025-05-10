@@ -15,7 +15,9 @@ async function main() {
   try {
     // Create a devbox and wait for it to be ready
     console.log("Creating devbox...");
-    devbox = await runloopClient.devboxes.createAndAwaitRunning();
+    devbox = await runloopClient.devboxes.createAndAwaitRunning({
+      name: "command-execution-devbox-ts",
+    });
     console.log(`Devbox created: ${devbox.id}`);
 
     // Example 1: Synchronous command execution
@@ -29,12 +31,12 @@ async function main() {
     console.log("\nExecuting asynchronous command...");
     const execution = await runloopClient.devboxes.executeAsync(devbox.id, {
       command:
-        "for i in {1..5}; do echo 'Hello from async command $i'; sleep 1; done",
+        'for i in {1..5}; do echo "Hello from async command $i"; sleep 1; done',
     });
 
     // Poll for results
     while (true) {
-      const status = await runloopClient.devboxes.executions.awaitCompleted(
+      const status = await runloopClient.devboxes.executions.retrieve(
         devbox.id,
         execution.execution_id
       );
