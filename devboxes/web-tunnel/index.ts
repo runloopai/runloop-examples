@@ -8,22 +8,19 @@ async function main() {
 
   // Create a devbox with port 4040 available and start a web server
   const devbox = await runloop.devboxes.createAndAwaitRunning({
-    launchParameters: {
-      availablePorts: [4040],
-      entrypoint: "python3 -m http.server 4040",
+    launch_parameters: {
+      available_ports: [4040],
+      keep_alive_time_seconds: 60,
     },
   });
   console.log(`Created devbox with ID: ${devbox.id}`);
 
   // Create a tunnel to the web server
-  const tunnel = await devbox.createTunnel({ port: 4040 });
-  console.log(`Tunnel URL: ${tunnel.url}`);
-
-  // Keep the tunnel open for 60 seconds
-  await new Promise((resolve) => setTimeout(resolve, 60000));
+  const tunnel = await runloop.devboxes.createTunnel(devbox.id, { port: 4040 });
+  console.log(`Tunnel URL: ${tunnel.url}:${tunnel.port}`);
 
   // Clean up
-  await devbox.delete();
+  await runloop.devboxes.shutdown(devbox.id);
   console.log("Devbox deleted");
 }
 
