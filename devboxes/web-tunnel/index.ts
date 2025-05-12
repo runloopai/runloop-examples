@@ -8,6 +8,7 @@ async function main() {
 
   // Create a devbox with port 4040 available and start a web server
   const devbox = await runloop.devboxes.createAndAwaitRunning({
+    name: "web-tunnel-ts",
     launch_parameters: {
       available_ports: [4040],
       keep_alive_time_seconds: 60,

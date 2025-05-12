@@ -6,6 +6,7 @@ runloop_client = Runloop(bearer_token=os.environ.get("RUNLOOP_API_KEY"))
 
 # Create a devbox with port 4040 available and start a web server
 devbox = runloop_client.devboxes.create_and_await_running(
+    name="web-tunnel-py",
     launch_parameters={
         "keep_alive_time_seconds": 60,
         "available_ports": [4040],
