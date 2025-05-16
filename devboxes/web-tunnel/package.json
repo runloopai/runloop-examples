@@ -1,0 +1,17 @@
+{
+  "name": "runloop-web-tunnel",
+  "version": "1.0.0",
+  "description": "Example of creating a tunnel to a web server in Runloop devboxes",
+  "main": "web_tunnel.ts",
+  "scripts": {
+    "start": "ts-node web_tunnel.ts"
+  },
+  "dependencies": {
+    "@runloop/api-client": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

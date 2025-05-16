@@ -1,0 +1,17 @@
+{
+  "name": "runloop-read-write-files",
+  "version": "1.0.0",
+  "description": "Example of reading and writing files in Runloop devboxes",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node index.ts"
+  },
+  "dependencies": {
+    "@runloop/api-client": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
