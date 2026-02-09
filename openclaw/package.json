@@ -1,0 +1,19 @@
+{
+  "name": "openclaw-runloop",
+  "version": "0.1.0",
+  "description": "OpenClaw + Runloop.ai Setup",
+  "type": "module",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "start": "tsx setup-openclaw-runloop.ts",
+    "parallel": "tsx parallel-openclaw-execution.ts"
+  },
+  "dependencies": {
+    "@runloop/api-client": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
