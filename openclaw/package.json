@@ -1,0 +1,22 @@
+{
+  "name": "openclaw-runloop",
+  "version": "0.1.0",
+  "description": "OpenClaw + Runloop.ai Setup",
+  "type": "module",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "start": "tsx setup-openclaw-runloop.ts",
+    "parallel": "tsx parallel-openclaw-execution.ts",
+    "lint": "pnpm run lint:py",
+    "lint:py": "uv run ruff check . && uv run ruff format --check .",
+    "lint:py:fix": "uv run ruff check --fix . && uv run ruff format ."
+  },
+  "dependencies": {
+    "@runloop/api-client": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
