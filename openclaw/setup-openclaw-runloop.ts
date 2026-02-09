@@ -18,7 +18,7 @@
 
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Runloop from "@runloop/api-client";
+import { RunloopSDK } from "@runloop/api-client";
 
 // ============================================================================
 // STEP 0: Local Setup
@@ -43,15 +43,14 @@ interface DevboxSetupResult {
 }
 
 async function setupOpenClawDevbox(): Promise<DevboxSetupResult> {
-  const client = new Runloop({
+  const client = new RunloopSDK({
     bearerToken: process.env.RUNLOOP_API_KEY,
   });
 
   console.log("Creating new devbox for OpenClaw installation...");
 
-  // Create a medium-sized devbox as root user
-  // Medium provides adequate resources for OpenClaw's operations
-  let devbox = await client.devboxes.create({
+  // Create a medium-sized devbox as root user (waits for running state)
+  const devbox = await client.devbox.create({
     name: "openclaw-setup",
     launch_parameters: {
       resource_size_request: "MEDIUM",
@@ -63,16 +62,6 @@ async function setupOpenClawDevbox(): Promise<DevboxSetupResult> {
   });
 
   console.log(`Devbox created: ${devbox.id}`);
-  console.log(`   Status: ${devbox.status}`);
-
-  // Wait for devbox to be ready
-  console.log("Waiting for devbox to reach running state...");
-  while (devbox.status !== "running") {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    devbox = await client.devboxes.retrieve(devbox.id);
-    console.log(`   Current status: ${devbox.status}`);
-  }
-
   console.log("Devbox is running!");
   console.log(`\n${"=".repeat(70)}`);
   console.log("MANUAL SETUP REQUIRED");
@@ -95,23 +84,21 @@ async function setupOpenClawDevbox(): Promise<DevboxSetupResult> {
   const snapshotName = `openclaw-base-${today}`;
 
   console.log(`\nCreating snapshot: ${snapshotName}...`);
-  const snapshot = await client.devboxes.snapshotDisk(devbox.id, {
-    name: snapshotName,
-  });
+  const snapshot = await devbox.snapshotDisk({ name: snapshotName });
 
   console.log("Snapshot created successfully!");
   console.log(`   Snapshot ID: ${snapshot.id}`);
-  console.log(`   Snapshot Name: ${snapshot.name}`);
+  console.log(`   Snapshot Name: ${snapshotName}`);
 
   // Shutdown the setup devbox (we'll use snapshots from now on)
   console.log("\nShutting down setup devbox...");
-  await client.devboxes.shutdown(devbox.id);
+  await devbox.shutdown();
   console.log("Setup devbox shutdown complete");
 
   return {
     devboxId: devbox.id,
     snapshotId: snapshot.id,
-    snapshotName: snapshot.name ?? "",
+    snapshotName,
   };
 }
 
@@ -139,7 +126,7 @@ async function executeOpenClawCommand(
   message: string,
   thinking: "low" | "medium" | "high" = "high",
 ): Promise<OpenClawExecutionResult> {
-  const client = new Runloop({
+  const client = new RunloopSDK({
     bearerToken: process.env.RUNLOOP_API_KEY,
   });
 
@@ -150,32 +137,22 @@ async function executeOpenClawCommand(
   console.log(`Thinking Level: ${thinking}`);
   console.log(`${"=".repeat(70)}\n`);
 
-  // Launch devbox from snapshot
+  // Launch devbox from snapshot (waits for running state)
   console.log("Launching devbox from snapshot...");
-  let devbox = await client.devboxes.create({
+  const devbox = await client.devbox.createFromSnapshot(snapshotId, {
     name: `openclaw-task-${Date.now()}`,
-    snapshot_id: snapshotId,
     launch_parameters: {
       resource_size_request: "MEDIUM",
     },
   });
 
   console.log(`Devbox launched: ${devbox.id}`);
-
-  // Wait for running state
-  while (devbox.status !== "running") {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    devbox = await client.devboxes.retrieve(devbox.id);
-  }
-
   console.log("Devbox ready for execution\n");
 
   // Create pre-execution snapshot
   const preSnapshotName = `openclaw-pre-${Date.now()}`;
   console.log(`Creating pre-execution snapshot: ${preSnapshotName}...`);
-  const preSnapshot = await client.devboxes.snapshotDisk(devbox.id, {
-    name: preSnapshotName,
-  });
+  const preSnapshot = await devbox.snapshotDisk({ name: preSnapshotName });
   console.log(`Pre-execution snapshot created: ${preSnapshot.id}\n`);
 
   // Execute OpenClaw command
@@ -183,36 +160,34 @@ async function executeOpenClawCommand(
   console.log(`Executing: ${openclawCommand}\n`);
   console.log("Streaming logs (this may take a while)...\n");
 
-  const result = await client.devboxes.executeSync(devbox.id, {
-    command: openclawCommand,
-  });
+  const result = await devbox.cmd.exec(openclawCommand);
+  const stdout = await result.stdout();
+  const stderr = await result.stderr();
 
   console.log("--- OpenClaw Output ---");
-  console.log(result.stdout);
-  if (result.stderr) {
+  console.log(stdout);
+  if (stderr) {
     console.log("--- Errors/Warnings ---");
-    console.log(result.stderr);
+    console.log(stderr);
   }
   console.log("--- End Output ---\n");
 
   // BEST PRACTICE: Snapshot after each command to preserve agent state
   const postSnapshotName = `openclaw-post-${Date.now()}`;
   console.log(`Creating post-execution snapshot: ${postSnapshotName}...`);
-  const postSnapshot = await client.devboxes.snapshotDisk(devbox.id, {
-    name: postSnapshotName,
-  });
+  const postSnapshot = await devbox.snapshotDisk({ name: postSnapshotName });
   console.log(`Post-execution snapshot created: ${postSnapshot.id}`);
   console.log("   This snapshot preserves the agent state for future use\n");
 
   // Shutdown devbox
   console.log("Shutting down devbox...");
-  await client.devboxes.shutdown(devbox.id);
+  await devbox.shutdown();
   console.log("Devbox shutdown complete\n");
 
   return {
     devboxId: devbox.id,
     command: openclawCommand,
-    output: result.stdout,
+    output: stdout,
     preExecutionSnapshot: preSnapshot.id,
     postExecutionSnapshot: postSnapshot.id,
   };
@@ -226,7 +201,7 @@ async function executeOpenClawCommand(
  * For interactive debugging or manual control, you can use RLI:
  *
  * 1. Create devbox from snapshot:
- *    const devbox = await client.devboxes.create({ snapshotId: 'snap_xxx' });
+ *    const devbox = await client.devbox.createFromSnapshot('snap_xxx', { name: 'my-devbox' });
  *
  * 2. SSH into the devbox:
  *    rli devbox ssh <devbox-id>
@@ -235,7 +210,7 @@ async function executeOpenClawCommand(
  *    openclaw agent --message "Your task" --thinking high
  *
  * 4. Exit and snapshot from your script:
- *    await client.snapshots.create({ devboxId: devbox.id, name: '...' });
+ *    await devbox.snapshotDisk({ name: '...' });
  *
  * This approach gives you full visibility into OpenClaw's execution
  * while maintaining the security boundary of the devbox.

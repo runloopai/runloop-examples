@@ -17,7 +17,7 @@
 
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Runloop from "@runloop/api-client";
+import { RunloopSDK } from "@runloop/api-client";
 
 interface ParallelTask {
   name: string;
@@ -44,7 +44,7 @@ async function executeParallelOpenClawTasks(
   baseSnapshotId: string,
   tasks: ParallelTask[],
 ): Promise<ParallelExecutionResult[]> {
-  const client = new Runloop({
+  const client = new RunloopSDK({
     bearerToken: process.env.RUNLOOP_API_KEY,
   });
 
@@ -116,7 +116,7 @@ async function executeParallelOpenClawTasks(
  * Internal helper function for parallel execution.
  */
 async function executeSingleTask(
-  client: Runloop,
+  client: RunloopSDK,
   snapshotId: string,
   task: ParallelTask,
   taskIndex: number,
@@ -126,53 +126,40 @@ async function executeSingleTask(
 
   console.log(`${taskPrefix} Starting execution...`);
 
-  // Launch devbox from snapshot
-  let devbox = await client.devboxes.create({
+  // Launch devbox from snapshot (waits for running state)
+  const devbox = await client.devbox.createFromSnapshot(snapshotId, {
     name: `openclaw-parallel-${taskIndex}-${Date.now()}`,
-    snapshot_id: snapshotId,
     launch_parameters: {
       resource_size_request: "MEDIUM",
     },
   });
 
   console.log(`${taskPrefix} Devbox created: ${devbox.id}`);
-
-  // Wait for running state
-  while (devbox.status !== "running") {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    devbox = await client.devboxes.retrieve(devbox.id);
-  }
-
   console.log(`${taskPrefix} Devbox running`);
 
   try {
     // Create pre-execution snapshot
     const preSnapshotName = `parallel-${taskIndex}-pre-${Date.now()}`;
-    console.log(`${taskPrefix} 📸 Creating pre-execution snapshot...`);
-    const preSnapshot = await client.devboxes.snapshotDisk(devbox.id, {
-      name: preSnapshotName,
-    });
+    console.log(`${taskPrefix} Creating pre-execution snapshot...`);
+    const preSnapshot = await devbox.snapshotDisk({ name: preSnapshotName });
 
     // Execute OpenClaw command
     const command = `openclaw agent --message "${task.message}" --thinking ${task.thinking}`;
-    console.log(`${taskPrefix} 🤖 Executing OpenClaw command...`);
+    console.log(`${taskPrefix} Executing OpenClaw command...`);
 
-    const result = await client.devboxes.executeSync(devbox.id, {
-      command: command,
-    });
+    const result = await devbox.cmd.exec(command);
+    const output = await result.stdout();
 
     // Create post-execution snapshot (BEST PRACTICE)
     const postSnapshotName = `parallel-${taskIndex}-post-${Date.now()}`;
-    console.log(`${taskPrefix} 📸 Creating post-execution snapshot...`);
-    const postSnapshot = await client.devboxes.snapshotDisk(devbox.id, {
-      name: postSnapshotName,
-    });
+    console.log(`${taskPrefix} Creating post-execution snapshot...`);
+    const postSnapshot = await devbox.snapshotDisk({ name: postSnapshotName });
 
     console.log(`${taskPrefix} Task completed successfully`);
 
     // Shutdown devbox
-    await client.devboxes.shutdown(devbox.id);
-    console.log(`${taskPrefix} 🛑 Devbox shutdown`);
+    await devbox.shutdown();
+    console.log(`${taskPrefix} Devbox shutdown`);
 
     const executionTime = Date.now() - startTime;
 
@@ -180,7 +167,7 @@ async function executeSingleTask(
       taskName: task.name,
       devboxId: devbox.id,
       success: true,
-      output: result.stdout,
+      output,
       preSnapshot: preSnapshot.id,
       postSnapshot: postSnapshot.id,
       executionTimeMs: executionTime,
@@ -190,9 +177,9 @@ async function executeSingleTask(
 
     // Attempt cleanup
     try {
-      await client.devboxes.shutdown(devbox.id);
+      await devbox.shutdown();
     } catch (cleanupError) {
-      console.error(`${taskPrefix} ⚠️  Failed to cleanup devbox`);
+      console.error(`${taskPrefix} Failed to cleanup devbox`);
     }
 
     throw error;
@@ -204,7 +191,7 @@ async function executeSingleTask(
 // ============================================================================
 
 async function parallelFeatureDevelopmentExample() {
-  console.log("🦞 Parallel OpenClaw Execution Example\n");
+  console.log("Parallel OpenClaw Execution Example\n");
 
   const baseSnapshotId = process.env.OPENCLAW_SNAPSHOT_ID;
 
@@ -250,7 +237,7 @@ async function parallelFeatureDevelopmentExample() {
   const results = await executeParallelOpenClawTasks(baseSnapshotId, tasks);
 
   // Process results
-  console.log("\n📝 Next Steps:");
+  console.log("\nNext Steps:");
   console.log("  1. Review the output from each task");
   console.log("  2. Launch devboxes from post-execution snapshots to inspect code");
   console.log("  3. Merge successful implementations into your main codebase");
@@ -282,11 +269,11 @@ async function parallelFeatureDevelopmentExample() {
  */
 
 async function multiStageParallelExample() {
-  const client = new Runloop({
+  const client = new RunloopSDK({
     bearerToken: process.env.RUNLOOP_API_KEY,
   });
 
-  console.log("\n🔄 Multi-Stage Parallel Execution\n");
+  console.log("\nMulti-Stage Parallel Execution\n");
 
   // Stage 1: Parallel research
   const researchTasks: ParallelTask[] = [

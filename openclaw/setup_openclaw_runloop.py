@@ -16,10 +16,9 @@ Setup Steps:
 5. Launch from snapshot for production use
 """
 
-import time
 import os
 from datetime import datetime
-from runloop_api_client import Runloop
+from runloop_api_client import RunloopSDK
 
 # ============================================================================
 # STEP 0: Local Setup
@@ -51,28 +50,18 @@ def setup_openclaw_devbox() -> DevboxSetupResult:
     Creates a devbox, guides user through OpenClaw installation via SSH,
     and creates a snapshot for future use.
     """
-    client = Runloop(bearer_token=os.environ.get("RUNLOOP_API_KEY"))
+    client = RunloopSDK(bearer_token=os.environ.get("RUNLOOP_API_KEY"))
 
     print("Creating new devbox for OpenClaw installation...")
 
-    # Create a medium-sized devbox as root user
-    # Medium provides adequate resources for OpenClaw's operations
-    devbox = client.devboxes.create(
+    # Create a medium-sized devbox as root user (waits for running state)
+    devbox = client.devbox.create(
         name="openclaw-setup",
         launch_parameters={"resource_size_request": "MEDIUM"},
         environment_variables={"USER": "root", "HOME": "/root"},
     )
 
     print(f"Devbox created: {devbox.id}")
-    print(f"   Status: {devbox.status}")
-
-    # Wait for devbox to be ready
-    print("Waiting for devbox to reach running state...")
-    while devbox.status != "running":
-        time.sleep(2)
-        devbox = client.devboxes.retrieve(devbox.id)
-        print(f"   Current status: {devbox.status}")
-
     print("Devbox is running!")
     print("\n" + "=" * 70)
     print("MANUAL SETUP REQUIRED")
@@ -95,19 +84,19 @@ def setup_openclaw_devbox() -> DevboxSetupResult:
     snapshot_name = f"openclaw-base-{today}"
 
     print(f"\nCreating snapshot: {snapshot_name}...")
-    snapshot = client.devboxes.snapshot_disk(devbox.id, name=snapshot_name)
+    snapshot = devbox.snapshot_disk(name=snapshot_name)
 
     print("Snapshot created successfully!")
     print(f"   Snapshot ID: {snapshot.id}")
-    print(f"   Snapshot Name: {snapshot.name}")
+    print(f"   Snapshot Name: {snapshot_name}")
 
     # Shutdown the setup devbox (we'll use snapshots from now on)
     print("\nShutting down setup devbox...")
-    client.devboxes.shutdown(devbox.id)
+    devbox.shutdown()
     print("Setup devbox shutdown complete")
 
     return DevboxSetupResult(
-        devbox_id=devbox.id, snapshot_id=snapshot.id, snapshot_name=snapshot.name
+        devbox_id=devbox.id, snapshot_id=snapshot.id, snapshot_name=snapshot_name
     )
 
 
@@ -150,7 +139,7 @@ def execute_openclaw_command(
     Returns:
         OpenClawExecutionResult with command output and snapshot IDs
     """
-    client = Runloop(bearer_token=os.environ.get("RUNLOOP_API_KEY"))
+    client = RunloopSDK(bearer_token=os.environ.get("RUNLOOP_API_KEY"))
 
     print(f"\n{'=' * 70}")
     print("OPENCLAW EXECUTION SESSION")
@@ -159,27 +148,21 @@ def execute_openclaw_command(
     print(f"Thinking Level: {thinking}")
     print("=" * 70 + "\n")
 
-    # Launch devbox from snapshot
+    # Launch devbox from snapshot (waits for running state)
     print("Launching devbox from snapshot...")
-    devbox = client.devboxes.create(
+    devbox = client.devbox.create_from_snapshot(
+        snapshot_id,
         name=f"openclaw-task-{int(datetime.now().timestamp())}",
-        snapshot_id=snapshot_id,
         launch_parameters={"resource_size_request": "MEDIUM"},
     )
 
     print(f"Devbox launched: {devbox.id}")
-
-    # Wait for running state
-    while devbox.status != "running":
-        time.sleep(2)
-        devbox = client.devboxes.retrieve(devbox.id)
-
     print("Devbox ready for execution\n")
 
     # Create pre-execution snapshot
     pre_snapshot_name = f"openclaw-pre-{int(datetime.now().timestamp())}"
     print(f"Creating pre-execution snapshot: {pre_snapshot_name}...")
-    pre_snapshot = client.devboxes.snapshot_disk(devbox.id, name=pre_snapshot_name)
+    pre_snapshot = devbox.snapshot_disk(name=pre_snapshot_name)
     print(f"Pre-execution snapshot created: {pre_snapshot.id}\n")
 
     # Execute OpenClaw command
@@ -187,31 +170,31 @@ def execute_openclaw_command(
     print(f"Executing: {openclaw_command}\n")
     print("Streaming logs (this may take a while)...\n")
 
-    result = client.devboxes.execute_sync(devbox.id, command=openclaw_command)
+    result = devbox.cmd.exec(openclaw_command)
 
     print("--- OpenClaw Output ---")
-    print(result.stdout)
-    if result.stderr:
+    print(result.stdout())
+    if result.stderr():
         print("--- Errors/Warnings ---")
-        print(result.stderr)
+        print(result.stderr())
     print("--- End Output ---\n")
 
     # BEST PRACTICE: Snapshot after each command to preserve agent state
     post_snapshot_name = f"openclaw-post-{int(datetime.now().timestamp())}"
     print(f"Creating post-execution snapshot: {post_snapshot_name}...")
-    post_snapshot = client.devboxes.snapshot_disk(devbox.id, name=post_snapshot_name)
+    post_snapshot = devbox.snapshot_disk(name=post_snapshot_name)
     print(f"Post-execution snapshot created: {post_snapshot.id}")
     print("   This snapshot preserves the agent state for future use\n")
 
     # Shutdown devbox
     print("Shutting down devbox...")
-    client.devboxes.shutdown(devbox.id)
+    devbox.shutdown()
     print("Devbox shutdown complete\n")
 
     return OpenClawExecutionResult(
         devbox_id=devbox.id,
         command=openclaw_command,
-        output=result.stdout,
+        output=result.stdout(),
         pre_execution_snapshot=pre_snapshot.id,
         post_execution_snapshot=post_snapshot.id,
     )
@@ -225,7 +208,7 @@ def execute_openclaw_command(
 For interactive debugging or manual control, you can use RLI:
 
 1. Create devbox from snapshot:
-   devbox = client.devboxes.create(snapshot_id='snap_xxx')
+   devbox = client.devbox.create_from_snapshot('snap_xxx', name='my-devbox')
 
 2. SSH into the devbox:
    rli devbox ssh <devbox-id>
@@ -234,7 +217,7 @@ For interactive debugging or manual control, you can use RLI:
    openclaw agent --message "Your task" --thinking high
 
 4. Exit and snapshot from your script:
-   client.devboxes.snapshot_disk(devbox.id, name='...')
+   devbox.snapshot_disk(name='...')
 
 This approach gives you full visibility into OpenClaw's execution
 while maintaining the security boundary of the devbox.
