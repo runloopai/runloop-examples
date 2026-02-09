@@ -5,7 +5,7 @@ This script demonstrates how to securely run OpenClaw inside Runloop devboxes,
 eliminating host-level security risks while maintaining full agent capabilities.
 
 Prerequisites:
-- Python 3.8+ installed locally
+- Python 3.12+ installed locally
 - Runloop account with API key (get from https://runloop.ai/dashboard)
 
 Setup Steps:
@@ -26,8 +26,8 @@ from runloop_api_client import RunloopSDK
 """
 Before running this script, install required tools locally:
 
-pip install runloop-api-client
-npm install -g rl-cli
+uv sync
+npm install -g rl-cli   (for rli devbox ssh during manual setup)
 
 Set your Runloop API key as an environment variable:
 export RUNLOOP_API_KEY="your_api_key_here"
@@ -171,12 +171,14 @@ def execute_openclaw_command(
     print("Streaming logs (this may take a while)...\n")
 
     result = devbox.cmd.exec(openclaw_command)
+    stdout = result.stdout()
+    stderr = result.stderr()
 
     print("--- OpenClaw Output ---")
-    print(result.stdout())
-    if result.stderr():
+    print(stdout)
+    if stderr:
         print("--- Errors/Warnings ---")
-        print(result.stderr())
+        print(stderr)
     print("--- End Output ---\n")
 
     # BEST PRACTICE: Snapshot after each command to preserve agent state
@@ -194,7 +196,7 @@ def execute_openclaw_command(
     return OpenClawExecutionResult(
         devbox_id=devbox.id,
         command=openclaw_command,
-        output=result.stdout(),
+        output=stdout,
         pre_execution_snapshot=pre_snapshot.id,
         post_execution_snapshot=post_snapshot.id,
     )

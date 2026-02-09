@@ -7,7 +7,7 @@ Python and TypeScript implementations share this directory for convenience; use 
 
 ## Python
 
-**Prerequisites:** [uv](https://github.com/astral-sh/uv), `export RUNLOOP_API_KEY="your_api_key_here"`
+**Prerequisites:** [uv](https://github.com/astral-sh/uv), [rl-cli](https://github.com/runloopai/rl-cli) (for `rli devbox ssh` during setup), `export RUNLOOP_API_KEY="your_api_key_here"`
 
 ```sh
 uv sync
@@ -22,11 +22,11 @@ uv run ruff check . && uv run ruff format --check .
 
 ## TypeScript
 
-**Prerequisites:** [pnpm](https://pnpm.io/), `export RUNLOOP_API_KEY="your_api_key_here"`
+**Prerequisites:** [pnpm](https://pnpm.io/), [rl-cli](https://github.com/runloopai/rl-cli) (for `rli devbox ssh` during setup), `export RUNLOOP_API_KEY="your_api_key_here"`
 
 ```sh
 pnpm install
 pnpm start
 ```
 
-For parallel execution: `pnpm run parallel`
+For parallel execution: `pnpm run parallel` (requires `OPENCLAW_SNAPSHOT_ID` from a completed setup run)

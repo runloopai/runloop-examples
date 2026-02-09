@@ -26,7 +26,8 @@ import { RunloopSDK } from "@runloop/api-client";
 /**
  * Before running this script, install required tools locally:
  *
- * npm install -g @runloop/api-client rl-cli
+ * pnpm install
+ * npm install -g rl-cli   (for rli devbox ssh during manual setup)
  *
  * Set your Runloop API key as an environment variable:
  * export RUNLOOP_API_KEY="your_api_key_here"
