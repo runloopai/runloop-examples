@@ -2,21 +2,16 @@
 // Requires package.json with dependencies
 
 import { RunloopSDK } from "@runloop/api-client";
-
-type EventOrigin = "EXTERNAL_EVENT" | "AGENT_EVENT" | "USER_EVENT";
-
-interface AxonEvent {
-  event_type: string;
-  origin: EventOrigin;
-  payload: string;
-  source: string;
-}
+import type { AxonPublishParams } from "@runloop/api-client/resources";
 
 function makeAxonEvent(
   eventType: string,
   payload: Record<string, unknown> | string,
-  { origin = "USER_EVENT", source = "axon_claude" }: { origin?: EventOrigin; source?: string } = {}
-): AxonEvent {
+  {
+    origin = "USER_EVENT",
+    source = "axon_claude",
+  }: { origin?: AxonPublishParams["origin"]; source?: string } = {}
+): AxonPublishParams {
   const wirePayload = typeof payload === "string" ? payload : JSON.stringify(payload);
   return {
     event_type: eventType,

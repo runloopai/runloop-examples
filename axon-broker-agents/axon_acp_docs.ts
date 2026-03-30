@@ -2,6 +2,7 @@
 // Requires package.json with dependencies
 
 import { RunloopSDK } from "@runloop/api-client";
+import type { AxonPublishParams } from "@runloop/api-client/resources";
 import {
   InitializeRequest,
   NewSessionRequest,
@@ -9,20 +10,14 @@ import {
   PROTOCOL_VERSION,
 } from "@agentclientprotocol/sdk";
 
-type EventOrigin = "EXTERNAL_EVENT" | "AGENT_EVENT" | "USER_EVENT";
-
-interface AxonEvent {
-  event_type: string;
-  origin: EventOrigin;
-  payload: string;
-  source: string;
-}
-
 function makeAxonEvent(
   eventType: string,
   payload: InitializeRequest | NewSessionRequest | PromptRequest | string,
-  { origin = "USER_EVENT", source = "axon_acp" }: { origin?: EventOrigin; source?: string } = {}
-): AxonEvent {
+  {
+    origin = "USER_EVENT",
+    source = "axon_acp",
+  }: { origin?: AxonPublishParams["origin"]; source?: string } = {}
+): AxonPublishParams {
   const wirePayload = typeof payload === "string" ? payload : JSON.stringify(payload);
   return {
     event_type: eventType,
