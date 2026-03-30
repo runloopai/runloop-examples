@@ -1,0 +1,8 @@
+{
+  "name": "axon-acp-example",
+  "type": "module",
+  "dependencies": {
+    "@runloop/api-client": "latest",
+    "@agentclientprotocol/sdk": "latest"
+  }
+}
