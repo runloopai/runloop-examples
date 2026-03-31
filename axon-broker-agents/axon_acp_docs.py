@@ -140,7 +140,7 @@ async def run() -> None:
 
 
 if __name__ == "__main__":
-    if os.getenv("RUNLOOP_API_KEY") is None:
+    if not os.getenv("RUNLOOP_API_KEY"):
         print("RUNLOOP_API_KEY is not set")
         exit(1)
     asyncio.run(run())
