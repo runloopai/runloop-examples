@@ -29,11 +29,12 @@ function makeAxonEvent(
 
 async function main(sdk: RunloopSDK): Promise<void> {
   // Create an Axon for session communication
-  const axon = await sdk.axon.create({ name: "acp-session" });
+  const axon = await sdk.axon.create({ name: "acp-tutorial-axon" });
 
   console.log("creating a devbox and installing opencode");
   // Create a Devbox with an ACP-compliant agent, Opencode
   const devbox = await sdk.devbox.create({
+    name: "acp-tutorial-opencode-devbox",
     mounts: [
       {
         type: "broker_mount",
@@ -89,9 +90,15 @@ async function main(sdk: RunloopSDK): Promise<void> {
 
       // Phase 2: Stream agent response
       if (promptSent) {
-        if (ev.event_type === "agent_message_chunk") {
-          const textPart = JSON.parse(ev.payload).update.content.text;
-          process.stdout.write(textPart);
+        // Check for session/update events with agent_message_chunk
+        if (ev.event_type === "session/update" && ev.origin === "AGENT_EVENT") {
+          const parsed = JSON.parse(ev.payload);
+          if (parsed.update?.sessionUpdate === "agent_message_chunk") {
+            const textPart = parsed.update?.content?.text;
+            if (textPart) {
+              process.stdout.write(textPart);
+            }
+          }
         }
         if (ev.event_type === "turn.completed") {
           break;

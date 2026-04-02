@@ -58,12 +58,13 @@ def make_axon_event(
 
 async def main(sdk: AsyncRunloopSDK) -> None:
     # Create an Axon for session communication
-    axon = await sdk.axon.create(name="acp-session")
+    axon = await sdk.axon.create(name="acp-tutorial-axon")
 
     print("creating a devbox and installing opencode")
 
     # Create a Devbox with an ACP-compliant agent, Opencode
     async with await sdk.devbox.create(
+        name="acp-tutorial-opencode-devbox",
         mounts=[
             {
                 "type": "broker_mount",
@@ -122,9 +123,13 @@ async def main(sdk: AsyncRunloopSDK) -> None:
 
                 # Phase 2: Stream agent response
                 if prompt_sent:
-                    if ev.event_type == "agent_message_chunk":
-                        text_part = json.loads(ev.payload)["update"]["content"]["text"]
-                        print(text_part, end="", flush=True)
+                    # Check for session/update events with agent_message_chunk
+                    if ev.event_type == "session/update" and ev.origin == "AGENT_EVENT":
+                        parsed = json.loads(ev.payload)
+                        if parsed.get("update", {}).get("sessionUpdate") == "agent_message_chunk":
+                            text_part = parsed.get("update", {}).get("content", {}).get("text")
+                            if text_part:
+                                print(text_part, end="", flush=True)
                     if ev.event_type == "turn.completed":
                         break
             print()
