@@ -57,7 +57,6 @@ These examples show you how to use add-ons which extend the core Runloop platfor
 
 | Example | Description | Location |
 |---------|-------------|----------|
-| **Browser Control** | Control web browsers and automate web tasks | [`runloop-demo-browser/`](runloop-demo-browser/) |
 | **Computer Control** | Interact with the local computer system | [`runloop-demo-computer/`](runloop-demo-computer/) |
 | **OpenClaw** | Securely run OpenClaw inside Runloop Devboxes, including a parallel-execution example | [`openclaw/`](openclaw/) |
 
