@@ -45,7 +45,8 @@ export async function main(): Promise<void> {
       break;
     }
     default:
-      console.log(USAGE);
+      console.error(USAGE);
+      process.exitCode = 1;
   }
 }
 

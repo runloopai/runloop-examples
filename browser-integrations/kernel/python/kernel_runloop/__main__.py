@@ -29,7 +29,8 @@ def main() -> None:
         if result.live_view_url:
             print(f"Live view: {result.live_view_url}")
     else:
-        print(USAGE)
+        print(USAGE, file=sys.stderr)
+        raise SystemExit(2)
 
 
 if __name__ == "__main__":

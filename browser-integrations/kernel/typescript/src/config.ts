@@ -60,7 +60,7 @@ structured data and a homepage screenshot per seed. Configuration is read from
 the environment, and results are written to files (no stdout protocol):
 
     TARGETS         JSON list of {"name", "url"}
-    LINKS_PER_SEED  level-1 internal links followed per seed (default 8)
+    LINKS_PER_SEED  level-1 internal links followed per seed (default 10)
     DEPTH           crawl depth, 1 or 2 (default 2)
     LEVEL2_PARENTS  how many level-1 pages to expand into level 2 (default 2)
     LEVEL2_LINKS    level-2 links per expanded parent (default 3)
@@ -141,7 +141,7 @@ def safe_name(name):
 
 def main():
     targets = json.loads(os.environ["TARGETS"])
-    links_per_seed = int(os.environ.get("LINKS_PER_SEED", "8"))
+    links_per_seed = int(os.environ.get("LINKS_PER_SEED", "10"))
     depth = int(os.environ.get("DEPTH", "2"))
     level2_parents = int(os.environ.get("LEVEL2_PARENTS", "2"))
     level2_links = int(os.environ.get("LEVEL2_LINKS", "3"))

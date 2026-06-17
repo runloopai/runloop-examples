@@ -10,8 +10,7 @@
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "create-blueprint": "tsx src/index.ts create-blueprint",
-    "run-kernel": "tsx src/index.ts run",
-    "e2e": "tsx src/index.ts e2e"
+    "run-kernel": "tsx src/index.ts run"
   },
   "dependencies": {
     "@onkernel/sdk": "^0.68.0",
