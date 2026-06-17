@@ -14,6 +14,7 @@ Please refer to the [Runloop documentation site](https://docs.runloop.ai) for mo
     - [Devbox Primitives](#devbox-primitives)
     - [Axons \& Broker](#axons--broker)
     - [Add-ons](#add-ons)
+    - [Browser Integrations](#browser-integrations)
     - [LLM \& Framework integrations](#llm--framework-integrations)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -60,6 +61,14 @@ These examples show you how to use add-ons which extend the core Runloop platfor
 | **Browser Control** | Control web browsers and automate web tasks | [`runloop-demo-browser/`](runloop-demo-browser/) |
 | **Computer Control** | Interact with the local computer system | [`runloop-demo-computer/`](runloop-demo-computer/) |
 | **OpenClaw** | Securely run OpenClaw inside Runloop Devboxes, including a parallel-execution example | [`openclaw/`](openclaw/) |
+
+### Browser Integrations
+
+Drive third-party cloud browser providers from Runloop devboxes. The agent runs in a devbox; the browser runs on the provider, so no Chromium runs in the devbox.
+
+| Provider | Description | Python | TypeScript |
+|----------|-------------|---------|------------|
+| **Kernel** | [Kernel](https://www.kernel.sh) cloud browsers driven server-side via Playwright Execute | [`browser-integrations/kernel/python/`](browser-integrations/kernel/python/) | [`browser-integrations/kernel/typescript/`](browser-integrations/kernel/typescript/) |
 
 ### LLM & Framework integrations
 
