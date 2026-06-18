@@ -2,7 +2,7 @@
 
 Give a Runloop agent browser access with [Kernel](https://www.kernel.sh): the agent runs in a devbox, the browser runs on Kernel, and the devbox drives it server-side with Playwright Execute, so no Chromium ever runs in the devbox.
 
-This is the runnable companion to the [Kernel on Runloop](https://docs.runloop.ai/docs/tutorials/kernel-runloop) tutorial and cookbook recipes.
+This is the runnable companion to the [Kernel on Runloop](https://docs.runloop.ai/docs/tutorials/kernel-runloop) tutorial.
 
 ## What's here
 
@@ -14,6 +14,8 @@ A **research crawl** (`run`), in both Python and TypeScript: a research agent in
 | TypeScript | [`typescript/`](typescript/) | `npm run {create-blueprint \| run-kernel}` |
 
 ## Setup
+
+The Python example needs Python 3.12+; the TypeScript example needs Node.js 18+.
 
 Both versions need two API keys:
 
