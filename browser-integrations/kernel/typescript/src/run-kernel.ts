@@ -166,7 +166,12 @@ export async function runKernel(
       if (!shot) {
         continue;
       }
-      const response = await devbox.file.download({ path: `${SHOTS_DIR}/${shot}` });
+      // Force identity encoding: the SDK's bundled node-fetch can throw
+      // ERR_STREAM_PREMATURE_CLOSE decompressing gzipped binary downloads on Node 18+.
+      const response = await devbox.file.download(
+        { path: `${SHOTS_DIR}/${shot}` },
+        { headers: { "Accept-Encoding": "identity" } },
+      );
       const data = Buffer.from(await response.arrayBuffer());
       await writeFile(path.join(shotsDir, shot), data);
       shotCount += 1;
