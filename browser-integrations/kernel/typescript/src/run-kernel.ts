@@ -28,11 +28,12 @@ import { provisionDevbox, uniqueName } from "./provision.js";
 import { status } from "./status.js";
 
 /**
- * The crawl runs longer than the SDK's default long-poll window, so widen it.
- * In the Python half this is a `PollingConfig(timeout_seconds=600)`; the TS SDK
- * expresses the same idea as `longPoll.timeoutMs`.
+ * The crawl runs several minutes for the default breadth, so widen the long-poll
+ * window well past the SDK default. Kept in sync with the Python half
+ * (`PollingConfig(timeout_seconds=900)`); the TS SDK expresses the same idea as
+ * `longPoll.timeoutMs`, with no client-side max-attempts clamp to work around.
  */
-const CRAWL_TIMEOUT_MS = 600_000;
+const CRAWL_TIMEOUT_MS = 900_000;
 
 /** Resource size accepted by the Runloop API (`launch_parameters.resource_size_request`). */
 type ResourceSize = NonNullable<Runloop.LaunchParameters["resource_size_request"]>;
@@ -141,7 +142,7 @@ export async function runKernel(
     // there is no fragile stdout-parsing protocol.
     status(`Devbox ${devbox.id} ready; uploading the crawl agent`);
     await devbox.file.write({ file_path: AGENT_REMOTE_PATH, contents: AGENT_SCRIPT });
-    status("Crawling in the devbox (typically 2-3 min); browser runs on Kernel");
+    status("Crawling in the devbox (typically 3-5 min); browser runs on Kernel");
     const result = await devbox.cmd.exec(`python3 ${AGENT_REMOTE_PATH}`, undefined, {
       longPoll: { timeoutMs: CRAWL_TIMEOUT_MS },
     });
@@ -150,11 +151,20 @@ export async function runKernel(
       throw new Error(`agent failed (exit ${result.exitCode}): ${stderr.slice(-300)}`);
     }
 
+    // Same gzip class as the screenshot download below: file.read also flows through
+    // the bundled node-fetch + gunzip path, so a large gzipped JSON body can throw
+    // ERR_STREAM_PREMATURE_CLOSE on Node 18+. Force identity encoding here too.
     const summary = JSON.parse(
-      await devbox.file.read({ file_path: `${RESULT_DIR}/summary.json` }),
+      await devbox.file.read(
+        { file_path: `${RESULT_DIR}/summary.json` },
+        { headers: { "Accept-Encoding": "identity" } },
+      ),
     ) as CrawlSummary;
     const report = JSON.parse(
-      await devbox.file.read({ file_path: `${RESULT_DIR}/report.json` }),
+      await devbox.file.read(
+        { file_path: `${RESULT_DIR}/report.json` },
+        { headers: { "Accept-Encoding": "identity" } },
+      ),
     ) as unknown;
 
     // Pull screenshots back as binary files (not base64-through-text).

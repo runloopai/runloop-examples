@@ -19,8 +19,13 @@ from runloop_api_client.sdk.devbox import Devbox
 if TYPE_CHECKING:
     from runloop_api_client.types.shared_params.launch_parameters import LaunchParameters
 
-# How long to wait for a devbox to reach `running` before giving up.
-PROVISION_TIMEOUT_SECONDS = 120
+# Fail-fast ceiling: the most we wait for the devbox to reach `running` before
+# giving up and tearing it down. It returns the instant it is running (boot is
+# ~1-3s), so this is just a stuck-provision guard, not an expected boot time. Keep
+# it well under the crawl window so a bad provision fails quickly. (If you ever
+# raise it past ~120s, also bump `max_attempts` on the PollingConfig below, or the
+# default of 120 attempts caps the real wait regardless of this value.)
+PROVISION_TIMEOUT_SECONDS = 60
 
 
 def unique_name(base: str) -> str:

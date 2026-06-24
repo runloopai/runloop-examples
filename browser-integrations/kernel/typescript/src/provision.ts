@@ -11,8 +11,10 @@
 
 import type { Devbox, Runloop, RunloopSDK } from "@runloop/api-client";
 
-/** How long to wait for a devbox to reach `running` before giving up. */
-const PROVISION_TIMEOUT_MS = 120_000;
+/** Fail-fast ceiling: the most we wait for the devbox to reach `running` before
+ * giving up and tearing it down. It returns the instant it is running (boot is
+ * ~1-3s), so this is just a stuck-provision guard, not an expected boot time. */
+const PROVISION_TIMEOUT_MS = 60_000;
 
 /** Append a random numeric slug so repeated runs do not stack identical devbox names. */
 export function uniqueName(base: string): string {
