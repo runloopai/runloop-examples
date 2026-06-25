@@ -30,9 +30,14 @@ from .config import (
 from .provision import provision_devbox, unique_name
 from .status import status
 
-# `cmd.exec` polls for completion with a 120s default; the crawl runs longer, so
-# widen the polling window (distinct from the per-request HTTP timeout).
-_CRAWL_POLLING = PollingConfig(interval_seconds=2.0, timeout_seconds=600)
+# `cmd.exec` polls for completion. The default PollingConfig caps `max_attempts` at
+# 120, so `timeout_seconds` alone does NOT widen the wait: at a 2s interval, polling
+# stops after ~120 attempts (~240s) regardless of `timeout_seconds`. Set `max_attempts`
+# high so `timeout_seconds` actually governs, and allow real headroom (the default-breadth
+# crawl runs several minutes). The HTTP `timeout` on `cmd.exec` is separate (per request).
+_CRAWL_POLLING = PollingConfig(interval_seconds=2.0, timeout_seconds=900, max_attempts=10000)
+# A cold `pip install` on the --manual path can exceed the default ~120s completion wait.
+_INSTALL_POLLING = PollingConfig(interval_seconds=2.0, timeout_seconds=300, max_attempts=10000)
 
 
 @dataclass
@@ -95,7 +100,9 @@ def run_kernel(
         if options.manual:
             status("Installing Kernel SDK in the devbox")
             install = devbox.cmd.exec(
-                "python3 -m pip install --user --quiet kernel", timeout=240
+                "python3 -m pip install --user --quiet kernel",
+                timeout=300,
+                polling_config=_INSTALL_POLLING,
             )
             if not install.success:
                 raise RuntimeError("kernel install failed: " + (install.stderr() or "")[-300:])
@@ -104,7 +111,7 @@ def run_kernel(
         # so there is no fragile stdout-parsing protocol.
         status(f"Devbox {devbox.id} ready; uploading the crawl agent")
         devbox.file.write(file_path=AGENT_REMOTE_PATH, contents=load_agent_source())
-        status("Crawling in the devbox (typically 2-3 min); browser runs on Kernel")
+        status("Crawling in the devbox (typically 3-5 min); browser runs on Kernel")
         result = devbox.cmd.exec(
             f"python3 {AGENT_REMOTE_PATH}", timeout=600, polling_config=_CRAWL_POLLING
         )
