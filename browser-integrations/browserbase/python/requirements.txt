@@ -1,0 +1,3 @@
+runloop_api_client>=1.23.2
+browserbase>=1.13.0
+playwright>=1.60.0

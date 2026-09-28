@@ -1,0 +1,24 @@
+{
+  "name": "browserbase-runloop",
+  "version": "0.1.0",
+  "description": "Drive Browserbase cloud browsers from Runloop devboxes.",
+  "type": "module",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "create-blueprint": "tsx src/index.ts create-blueprint",
+    "run-browserbase": "tsx src/index.ts run"
+  },
+  "dependencies": {
+    "@browserbasehq/sdk": "^2.14.1",
+    "@runloop/api-client": "^1.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
