@@ -93,7 +93,7 @@ def main() -> int:
     try:
         report = asyncio.run(compare())
     except Exception as exc:
-        print(f"Probe failed: {type(exc).__name__}: {exc}", file=sys.stderr)
+        print(f"Probe failed: {type(exc).__name__}", file=sys.stderr)
         return 2
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     print(f"Wrote {args.output}")
