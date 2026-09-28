@@ -1,0 +1,8 @@
+{
+  "name": "nemoclaw-runloop",
+  "type": "module",
+  "dependencies": {
+    "@runloop/api-client": "latest",
+    "@agentclientprotocol/sdk": "latest"
+  }
+}
