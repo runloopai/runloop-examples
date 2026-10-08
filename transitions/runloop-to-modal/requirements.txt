@@ -1,0 +1,2 @@
+runloop-api-client==1.32.0
+modal==1.5.5

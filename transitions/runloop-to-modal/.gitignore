@@ -1,0 +1,5 @@
+.venv/
+transition-results*.json
+*_private.json
+__pycache__/
+*.pyc

@@ -16,6 +16,7 @@ Please refer to the [Runloop documentation site](https://docs.runloop.ai) for mo
     - [Add-ons](#add-ons)
     - [Browser Integrations](#browser-integrations)
     - [LLM \& Framework integrations](#llm--framework-integrations)
+    - [Transition comparisons](#transition-comparisons)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -83,3 +84,7 @@ These examples show integrations with various LLM providers and frameworks.
 | **Mistral** | Mistral AI API integration | [`llm-integrations/mistral/python/`](llm-integrations/mistral/python/) | [`llm-integrations/mistral/typescript/`](llm-integrations/mistral/typescript/) |
 | **OpenAI** | OpenAI API integration | [`llm-integrations/openai/python/`](llm-integrations/openai/python/) | [`llm-integrations/openai/typescript/`](llm-integrations/openai/typescript/) |
 | **Vercel AI** | Vercel AI SDK integration | - | [`llm-integrations/vercelai/typescript/`](llm-integrations/vercelai/typescript/) |
+
+### Transition comparisons
+
+- [Runloop to Modal](transitions/runloop-to-modal/): compare command execution and UTF-8 file round trips through both Python SDKs.
