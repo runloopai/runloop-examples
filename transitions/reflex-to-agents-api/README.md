@@ -1,6 +1,6 @@
 # Reflex workflows with the OpenAI Agents API
 
-Runnable examples accompanying [the Reflex to Agents API transition guide](https://github.com/runloopai/docs/pull/269).
+Runnable examples accompanying [the Reflex to Agents API guide preview](https://runloopai-docs-reflex-to-agents-api.mintlify.site/docs/transitions/reflex-to-agents-api).
 The guide is the starting point. These scripts use OpenAI-managed sandboxes only.
 
 | Reflex usage pattern | Example |
