@@ -1,0 +1,7 @@
+{
+  "name": "runloop-freestyle-transition-probe",
+  "private": true,
+  "type": "module",
+  "scripts": { "probe": "node compare_core_public.mjs" },
+  "dependencies": { "@runloop/api-client": "2.0.0", "freestyle": "0.2.17" }
+}
