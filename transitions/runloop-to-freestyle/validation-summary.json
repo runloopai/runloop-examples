@@ -3,8 +3,20 @@
     "@runloop/api-client": "2.0.0",
     "freestyle": "0.2.17"
   },
-  "startedAt": "2026-10-12T04:38:10.316Z",
-  "finishedAt": "2026-10-12T04:38:21.805Z",
+  "startedAt": "2026-10-12T04:44:06.162Z",
+  "finishedAt": "2026-10-12T04:44:17.768Z",
+  "cleanup": {
+    "freestyleRestored": "ok",
+    "runloopRestored": "ok",
+    "freestyleSnapshot": "ok",
+    "runloopSnapshot": "ok",
+    "freestyleDns-tcp": "ok",
+    "freestyleDns-udp": "ok",
+    "freestyleFirewall": "ok",
+    "freestyle": "ok",
+    "runloop": "ok"
+  },
+  "errors": [],
   "cases": [
     {
       "name": "command exit 0",
@@ -27,7 +39,7 @@
       "pass": true
     },
     {
-      "name": "binary SDK read",
+      "name": "Freestyle binary SDK read",
       "pass": true
     },
     {
@@ -75,16 +87,23 @@
       "pass": true
     }
   ],
-  "cleanup": {
-    "freestyleRestored": "ok",
-    "runloopRestored": "ok",
-    "freestyleSnapshot": "ok",
-    "runloopSnapshot": "ok",
-    "freestyleDns-tcp": "ok",
-    "freestyleDns-udp": "ok",
-    "freestyleFirewall": "ok",
-    "freestyle": "ok",
-    "runloop": "ok"
-  },
-  "errors": []
+  "faultInjection": {
+    "case": "Exception after Runloop snapshot completion, before Freestyle capture",
+    "expectedExit": 2,
+    "errors": [
+      {
+        "stage": "snapshots",
+        "type": "Error"
+      }
+    ],
+    "cleanup": {
+      "runloopSnapshot": "ok",
+      "freestyleDns-tcp": "ok",
+      "freestyleDns-udp": "ok",
+      "freestyleFirewall": "ok",
+      "freestyle": "ok",
+      "runloop": "ok"
+    },
+    "pass": true
+  }
 }

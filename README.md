@@ -87,6 +87,8 @@ These examples show integrations with various LLM providers and frameworks.
 
 ### Transition comparisons
 
+- [Runloop to Freestyle](transitions/runloop-to-freestyle/): compare SDK commands, files, pause/resume, firewall rules, and snapshot restoration.
+
 - [Runloop to Modal](transitions/runloop-to-modal/): compare command execution and UTF-8 file round trips through both Python SDKs.
 
 - [Reflex to OpenAI Agents API](transitions/reflex-to-agents-api/README.md): managed sessions, personas, MCP connections, GitHub authentication, and continuing work.

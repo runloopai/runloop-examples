@@ -27,3 +27,5 @@ Native snapshot comparisons do not demonstrate cross-provider snapshot import. T
 ## Recorded live evidence
 
 On October 11, 2026 (PT), the extended probe passed **17/17 assertions** with `@runloop/api-client` 2.0.0 and `freestyle` 0.2.17. All nine VM, snapshot, and firewall/DNS cleanup actions succeeded. [validation-summary.json](validation-summary.json) contains the sanitized case results and timestamps; raw resource IDs and fixture output remain private.
+
+A live fault-injection run also forced an exception after the Runloop snapshot completed: exit 2 was returned, the snapshot ID was recorded privately, and all six registered resources were cleaned up. The script registers the snapshot before waiting, so cleanup remains available when the wait raises.

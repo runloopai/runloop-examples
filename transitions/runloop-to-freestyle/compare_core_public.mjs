@@ -102,17 +102,20 @@ try {
     };
     check("binary, large file, mode and symlink manifest", r, f, expectedManifest);
     const targetBytes = await vm.fs.readFile(`${path}/binary`);
-    check(
-      "binary SDK read",
-      Buffer.from("binary\0fixture").toString("hex"),
-      Buffer.from(targetBytes).toString("hex"),
-      Buffer.from("binary\0fixture").toString("hex"),
-    );
+    report.cases.push({
+      name: "Freestyle binary SDK read",
+      actual: Buffer.from(targetBytes).toString("hex"),
+      pass: Buffer.from(targetBytes).equals(Buffer.from("binary\0fixture")),
+    });
     stage = "network denial";
     const denied = await vm.exec(
-      "curl --connect-timeout 3 --max-time 5 -s https://example.com >/dev/null; test $? -ne 0",
+      "curl --connect-timeout 3 --max-time 5 -s https://example.com >/dev/null",
     );
-    report.cases.push({ name: "Freestyle default-deny outbound", pass: denied.statusCode === 0 });
+    report.cases.push({
+      name: "Freestyle default-deny outbound",
+      actual: denied,
+      pass: [6, 7, 28].includes(denied.statusCode),
+    });
     stage = "network allow";
     const rule = await freestyle.firewall.rules.create({
       action: "allow",
@@ -152,12 +155,16 @@ try {
     check(
       "Freestyle to Runloop reverse transfer",
       await box.file.read({ file_path: `${path}/returned.txt` }),
-      source,
+      await vm.fs.readTextFile(`${path}/migrated.txt`),
       content,
     );
     stage = "pause and resume";
     const pidFile = `${path}/process`;
-    const started = await vm.exec(`sleep 600 >/dev/null 2>&1 & echo $! > ${pidFile}`);
+    const processName = `transition-worker-${token}`;
+    const started = await vm.exec(
+      `bash -c 'exec -a ${processName} sleep 600' >/dev/null 2>&1 & echo $! > ${pidFile}`,
+    );
+    const processIdentity = `tr '\\000' ' ' < /proc/$(cat ${pidFile})/cmdline`;
     report.cases.push({
       name: "Freestyle background process started",
       pass: started.statusCode === 0,
@@ -181,12 +188,16 @@ try {
       await vm.fs.readTextFile(`${path}.txt`),
       content,
     );
-    const alive = await vm.exec(`kill -0 $(cat ${pidFile})`);
-    report.cases.push({ name: "Freestyle process survives pause", pass: alive.statusCode === 0 });
+    const alive = await vm.exec(processIdentity);
+    report.cases.push({
+      name: "Freestyle process survives pause",
+      pass: alive.statusCode === 0 && alive.stdout === `${processName} 600 `,
+    });
     stage = "snapshots";
-    const rs = await box.snapshotDisk({ name: `transition-probe-${token.slice(0, 12)}` });
+    const rs = await box.snapshotDiskAsync({ name: `transition-probe-${token.slice(0, 12)}` });
     report.resources.runloopSnapshot = rs.id;
     cleanup.push(["runloopSnapshot", () => rs.delete()]);
+    await rs.awaitCompleted();
     const { snapshotId } = await vm.snapshot({
       slug: `transition-probe-${token.slice(0, 12)}`,
       ttlSeconds: 3600,
@@ -206,10 +217,10 @@ try {
     cleanup.push(["freestyleRestored", () => restoredVm.delete()]);
     const [rr, ff] = await commands(restoredBox, restoredVm, manifestCommand);
     check("restored filesystem manifest", rr, ff, expectedManifest);
-    const restoredAlive = await restoredVm.exec(`kill -0 $(cat ${pidFile})`);
+    const restoredAlive = await restoredVm.exec(processIdentity);
     report.cases.push({
       name: "Freestyle snapshot preserves process",
-      pass: restoredAlive.statusCode === 0,
+      pass: restoredAlive.statusCode === 0 && restoredAlive.stdout === `${processName} 600 `,
     });
   }
 } catch (error) {
