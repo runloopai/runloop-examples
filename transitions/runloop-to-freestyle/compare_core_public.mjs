@@ -57,9 +57,14 @@ try {
   const runloop = new RunloopSDK();
   const freestyle = new Freestyle();
   stage = "Runloop creation";
-  const box = await runloop.devbox.create({ name: `transition-probe-${token.slice(0, 12)}` });
+  const createdBox = await runloop.api.devboxes.create({
+    name: `transition-probe-${token.slice(0, 12)}`,
+    launch_parameters: { keep_alive_time_seconds: 3600 },
+  });
+  const box = runloop.devbox.fromId(createdBox.id);
   report.resources.runloop = box.id;
   cleanup.push(["runloop", () => box.shutdown()]);
+  await box.awaitRunning();
   stage = "Freestyle creation";
   const { vm, vmId } = await freestyle.vms.create({
     slug: `transition-probe-${token.slice(0, 12)}`,
@@ -205,9 +210,14 @@ try {
     report.resources.freestyleSnapshot = snapshotId;
     cleanup.push(["freestyleSnapshot", () => freestyle.vms.snapshots.delete(snapshotId)]);
     stage = "snapshot restore";
-    const restoredBox = await runloop.devbox.create({ snapshot_id: rs.id });
+    const restoredData = await runloop.api.devboxes.create({
+      snapshot_id: rs.id,
+      launch_parameters: { keep_alive_time_seconds: 3600 },
+    });
+    const restoredBox = runloop.devbox.fromId(restoredData.id);
     report.resources.runloopRestored = restoredBox.id;
     cleanup.push(["runloopRestored", () => restoredBox.shutdown()]);
+    await restoredBox.awaitRunning();
     const { vm: restoredVm, vmId: restoredId } = await freestyle.vms.create({
       snapshotId,
       ttlSeconds: 3600,

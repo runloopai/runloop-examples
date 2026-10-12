@@ -3,8 +3,8 @@
     "@runloop/api-client": "2.0.0",
     "freestyle": "0.2.17"
   },
-  "startedAt": "2026-10-12T04:44:06.162Z",
-  "finishedAt": "2026-10-12T04:44:17.768Z",
+  "startedAt": "2026-10-12T04:48:47.322Z",
+  "finishedAt": "2026-10-12T04:48:59.221Z",
   "cleanup": {
     "freestyleRestored": "ok",
     "runloopRestored": "ok",
@@ -102,6 +102,20 @@
       "freestyleDns-udp": "ok",
       "freestyleFirewall": "ok",
       "freestyle": "ok",
+      "runloop": "ok"
+    },
+    "pass": true
+  },
+  "readinessFaultInjection": {
+    "case": "Exception after devbox creation, before readiness wait",
+    "expectedExit": 2,
+    "errors": [
+      {
+        "stage": "Runloop creation",
+        "type": "Error"
+      }
+    ],
+    "cleanup": {
       "runloop": "ok"
     },
     "pass": true

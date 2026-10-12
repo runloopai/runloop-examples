@@ -14,7 +14,7 @@ npm run probe -- --extended --output transition-results_private.json
 
 The default probe checks successful and nonzero command exits, stdout/stderr, and a UTF-8 file round trip. Extended mode adds binary and 1 MiB fixtures, modes and symlinks, application-file transfer in both directions, outbound firewall denial and allowance, suspend/pause and resume, native snapshots and restoration, and Freestyle process survival across pause and snapshot restore.
 
-Freestyle VMs boot from `freestyle/ubuntu-sm` with no outbound allow rules initially. The extended probe adds HTTPS and DNS rules for its own VM. VMs and Freestyle snapshots have a one-hour deletion deadline as a fallback, and the script attempts explicit cleanup of every resource it created, including the Runloop snapshot. It never deletes pre-existing resources.
+Freestyle VMs boot from `freestyle/ubuntu-sm` with no outbound allow rules initially. The extended probe adds HTTPS and DNS rules for its own VM. Freestyle VMs and snapshots have a one-hour deletion deadline, and Runloop devboxes have an explicit one-hour keep-alive fallback, and the script attempts explicit cleanup of every resource it created, including the Runloop snapshot. It never deletes pre-existing resources.
 
 Exit `0` means all assertions and cleanup passed, `1` means a mismatch or cleanup failure, and `2` means an API/setup error. Inspect `errors`, `resources`, and `cleanup` even after a failed run. The report preserves stage and error type without printing SDK exception bodies, which can contain request credentials. Failed cleanup requires manual removal using the recorded IDs. The output file is created with mode `0600`; do not reuse an existing world-readable output file.
 
@@ -29,3 +29,5 @@ Native snapshot comparisons do not demonstrate cross-provider snapshot import. T
 On October 11, 2026 (PT), the extended probe passed **17/17 assertions** with `@runloop/api-client` 2.0.0 and `freestyle` 0.2.17. All nine VM, snapshot, and firewall/DNS cleanup actions succeeded. [validation-summary.json](validation-summary.json) contains the sanitized case results and timestamps; raw resource IDs and fixture output remain private.
 
 A live fault-injection run also forced an exception after the Runloop snapshot completed: exit 2 was returned, the snapshot ID was recorded privately, and all six registered resources were cleaned up. The script registers the snapshot before waiting, so cleanup remains available when the wait raises.
+
+A readiness-failure injection after Runloop creation also returned exit 2 and cleaned up the recorded devbox. Both primary and snapshot-restored devboxes are registered before their readiness waits.
