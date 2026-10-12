@@ -1,0 +1,12 @@
+# Run outputs
+report.json
+screenshots/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+dist/

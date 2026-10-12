@@ -69,6 +69,7 @@ Drive third-party cloud browser providers from Runloop devboxes. The agent runs 
 | Provider | Description | Python | TypeScript |
 |----------|-------------|---------|------------|
 | **Kernel** | [Kernel](https://www.kernel.sh) cloud browsers driven server-side via Playwright Execute | [`browser-integrations/kernel/python/`](browser-integrations/kernel/python/) | [`browser-integrations/kernel/typescript/`](browser-integrations/kernel/typescript/) |
+| **Notte** | Test an app served from a devbox with [Notte](https://notte.cc) cloud browsers, via Playwright over CDP and the Notte CLI | [`browser-integrations/notte/python/`](browser-integrations/notte/python/) | [`browser-integrations/notte/typescript/`](browser-integrations/notte/typescript/) |
 
 ### LLM & Framework integrations
 
