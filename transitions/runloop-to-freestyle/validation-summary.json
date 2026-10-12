@@ -1,0 +1,90 @@
+{
+  "versions": {
+    "@runloop/api-client": "2.0.0",
+    "freestyle": "0.2.17"
+  },
+  "startedAt": "2026-10-12T04:38:10.316Z",
+  "finishedAt": "2026-10-12T04:38:21.805Z",
+  "cases": [
+    {
+      "name": "command exit 0",
+      "pass": true
+    },
+    {
+      "name": "command exit 7",
+      "pass": true
+    },
+    {
+      "name": "UTF-8 file round trip",
+      "pass": true
+    },
+    {
+      "name": "fixture creation",
+      "pass": true
+    },
+    {
+      "name": "binary, large file, mode and symlink manifest",
+      "pass": true
+    },
+    {
+      "name": "binary SDK read",
+      "pass": true
+    },
+    {
+      "name": "Freestyle default-deny outbound",
+      "pass": true
+    },
+    {
+      "name": "Freestyle explicit HTTPS allow",
+      "pass": true
+    },
+    {
+      "name": "Runloop to Freestyle file transfer",
+      "pass": true
+    },
+    {
+      "name": "Freestyle to Runloop reverse transfer",
+      "pass": true
+    },
+    {
+      "name": "Freestyle background process started",
+      "pass": true
+    },
+    {
+      "name": "Freestyle disk read while paused",
+      "pass": true
+    },
+    {
+      "name": "Freestyle read leaves VM paused",
+      "pass": true
+    },
+    {
+      "name": "disk after resume",
+      "pass": true
+    },
+    {
+      "name": "Freestyle process survives pause",
+      "pass": true
+    },
+    {
+      "name": "restored filesystem manifest",
+      "pass": true
+    },
+    {
+      "name": "Freestyle snapshot preserves process",
+      "pass": true
+    }
+  ],
+  "cleanup": {
+    "freestyleRestored": "ok",
+    "runloopRestored": "ok",
+    "freestyleSnapshot": "ok",
+    "runloopSnapshot": "ok",
+    "freestyleDns-tcp": "ok",
+    "freestyleDns-udp": "ok",
+    "freestyleFirewall": "ok",
+    "freestyle": "ok",
+    "runloop": "ok"
+  },
+  "errors": []
+}
