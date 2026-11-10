@@ -1,0 +1,21 @@
+{
+  "name": "voidrush",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test.js",
+    "test:browser": "node tests/browser-steering.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "ws": "^8.22.2"
+  },
+  "devDependencies": {
+    "playwright": "^1.65.0"
+  }
+}
